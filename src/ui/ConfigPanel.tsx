@@ -1,21 +1,13 @@
+import { useState } from 'react'
 import type { FacadeType, Opening, OpeningType, RoofCovering, ShedConfig, ShingleSpec, StructuralRole, WallSide } from '../config/types'
 import { deriveSpacing } from '../config/defaults'
 import { CheckboxRow, NumberRow, Section, SelectRow, type Option } from './fields'
+import { ROLE_LABELS } from './labels'
+import { ProfileDialog } from './ProfileDialog'
 
 interface Props {
   config: ShedConfig
   setConfig: (updater: (c: ShedConfig) => ShedConfig) => void
-}
-
-const ROLE_LABELS: Record<StructuralRole, string> = {
-  gradeBeam: 'Grade beam / bearer',
-  joist: 'Floor joist',
-  rafter: 'Roof rafter',
-  stud: 'Wall stud',
-  plate: 'Wall plate',
-  header: 'Opening header',
-  batten: 'Batten',
-  fascia: 'Fascia / barge',
 }
 
 const FACADE_OPTIONS: Option[] = [
@@ -45,9 +37,11 @@ export function ConfigPanel({ config, setConfig }: Props) {
   const fastenerOptions: Option[] = config.fasteners.catalog.map((f) => ({ value: f.id, label: f.label }))
 
   const markCustom = (c: ShedConfig): ShedConfig => ({ ...c, preset: 'custom' })
+  const [profilesOpen, setProfilesOpen] = useState(false)
 
   return (
     <div className="config-panel">
+      {profilesOpen && <ProfileDialog config={config} setConfig={setConfig} onClose={() => setProfilesOpen(false)} />}
       <Section title="Dimensions" open>
         <NumberRow label="Base width" value={config.base.width} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, width: v } }))} />
         <NumberRow label="Base depth" value={config.base.depth} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, depth: v } }))} />
@@ -93,6 +87,9 @@ export function ConfigPanel({ config, setConfig }: Props) {
       </Section>
 
       <Section title="Timber profiles (per role)">
+        <button className="add-btn" onClick={() => setProfilesOpen(true)}>
+          Edit profiles…
+        </button>
         {(Object.keys(ROLE_LABELS) as StructuralRole[]).map((role) => (
           <SelectRow
             key={role}

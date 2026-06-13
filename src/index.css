@@ -274,6 +274,94 @@ body,
   padding: 2px 0;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--panel);
+  border-radius: 8px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 84vh;
+  overflow-y: auto;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.modal-head h2 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.modal-error {
+  background: #fdecea;
+  border: 1px solid #f5c6c2;
+  color: #9b2c22;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.profile-cols,
+.profile-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 14px 80px 80px;
+  gap: 6px;
+  align-items: center;
+}
+
+.profile-cols {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.profile-row {
+  margin: 4px 0;
+}
+
+.profile-row input {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: 100%;
+}
+
+.profile-row input[type='number'] {
+  text-align: right;
+}
+
+.profile-row .remove-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .ruler-label {
   background: #ff3b30;
   color: #fff;

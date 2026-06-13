@@ -13,7 +13,7 @@ interface Props {
 export function Toolbar({ config, setConfig, rulerActive, onToggleRuler, onExport, onReset }: Props) {
   return (
     <div className="toolbar">
-      <div className="brand">Shed Constructor</div>
+      <div className="brand">Shed Calculator</div>
 
       <label className="toolbar-field">
         Preset
