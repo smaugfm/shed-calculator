@@ -7,9 +7,10 @@ interface Props {
   rulerActive: boolean
   onToggleRuler: () => void
   onExport: () => void
+  onReset: () => void
 }
 
-export function Toolbar({ config, setConfig, rulerActive, onToggleRuler, onExport }: Props) {
+export function Toolbar({ config, setConfig, rulerActive, onToggleRuler, onExport, onReset }: Props) {
   return (
     <div className="toolbar">
       <div className="brand">Shed Constructor</div>
@@ -37,6 +38,10 @@ export function Toolbar({ config, setConfig, rulerActive, onToggleRuler, onExpor
 
       <button className="export-btn" onClick={onExport}>
         ⬇ Export .glb
+      </button>
+
+      <button onClick={() => { if (confirm('Reset all configuration to defaults?')) onReset() }}>
+        ↺ Reset
       </button>
     </div>
   )

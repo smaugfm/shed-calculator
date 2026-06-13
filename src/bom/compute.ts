@@ -2,7 +2,8 @@ import type { ShedConfig } from '../config/types'
 import { findProfile } from '../config/profiles'
 import type { Member, Panel, PanelKind, Piece, ShedModel } from '../model/types'
 import { materialSpecs, type MaterialId } from '../model/materials'
-import type { BillOfMaterials, BomCategory, BomLine } from './types'
+import { packLengths, packSheets } from '../model/nesting'
+import type { BillOfMaterials, BomLine } from './types'
 
 function round(n: number, dp = 1): number {
   const f = 10 ** dp
@@ -54,29 +55,57 @@ function timberLines(members: Member[], config: ShedConfig): BomLine[] {
   return lines.sort((a, b) => a.label.localeCompare(b.label))
 }
 
-// Discrete cut pieces (OSB sheets, cladding boards, shingles): count to buy + bought area + offcut.
+function pieceBBox(p: Piece): { w: number; h: number } {
+  const us = p.uv.map((c) => c.u)
+  const vs = p.uv.map((c) => c.v)
+  return { w: Math.max(...us) - Math.min(...us), h: Math.max(...vs) - Math.min(...vs) }
+}
+
+// Cut pieces with offcut nesting: OSB packed into 2D sheets, cladding into 1D boards, shingles
+// counted as discrete units.
 function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
   const specs = materialSpecs(config)
-  const category: Record<MaterialId, BomCategory> = {
-    'osb-floor': 'Sheets',
-    'osb-wall': 'Sheets',
-    'osb-roof': 'Sheets',
-    cladding: 'Membrane & covering',
-    roofing: 'Membrane & covering',
-  }
-  const ids: MaterialId[] = ['osb-floor', 'osb-wall', 'osb-roof', 'cladding', 'roofing']
   const lines: BomLine[] = []
-  for (const id of ids) {
+  const sheetArea = (config.stock.sheetWidth * config.stock.sheetHeight) / 1e6
+
+  for (const id of ['osb-floor', 'osb-wall', 'osb-roof'] as const) {
     const group = pieces.filter((p) => p.materialId === id)
     if (group.length === 0) continue
-    const bought = group.reduce((s, p) => s + p.nominalArea, 0)
+    const sheets = packSheets(group.map(pieceBBox), config.stock.sheetWidth, config.stock.sheetHeight, true)
+    const bought = sheets * sheetArea
     const used = group.reduce((s, p) => s + p.usedArea, 0)
-    const spec = specs[id]
     lines.push({
-      category: category[id],
-      label: spec.label,
-      spec: `${group.length} pcs (${spec.dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
-      qty: group.length,
+      category: 'Sheets',
+      label: specs[id].label,
+      spec: `${sheets} sheets (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      qty: sheets,
+      unit: 'sheets',
+    })
+  }
+
+  const clad = pieces.filter((p) => p.materialId === 'cladding')
+  if (clad.length > 0) {
+    const boards = packLengths(clad.map((p) => pieceBBox(p).h), config.walls.cladding.length)
+    const bought = (boards * config.walls.cladding.width * config.walls.cladding.length) / 1e6
+    const used = clad.reduce((s, p) => s + p.usedArea, 0)
+    lines.push({
+      category: 'Membrane & covering',
+      label: specs.cladding.label,
+      spec: `${boards} boards (${specs.cladding.dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      qty: boards,
+      unit: 'boards',
+    })
+  }
+
+  const roof = pieces.filter((p) => p.materialId === 'roofing')
+  if (roof.length > 0) {
+    const bought = roof.reduce((s, p) => s + p.nominalArea, 0)
+    const used = roof.reduce((s, p) => s + p.usedArea, 0)
+    lines.push({
+      category: 'Membrane & covering',
+      label: specs.roofing.label,
+      spec: `${roof.length} pcs (${specs.roofing.dims}) · ${round(used)} m² covered · ${round(bought - used)} m² offcut`,
+      qty: roof.length,
       unit: 'pcs',
     })
   }

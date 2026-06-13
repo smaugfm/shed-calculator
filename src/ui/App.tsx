@@ -12,7 +12,7 @@ function allLayersVisible(): Record<LayerName, boolean> {
 }
 
 export function App() {
-  const { config, setConfig, model, bom } = useShed()
+  const { config, setConfig, reset, model, bom } = useShed()
   const [rulerActive, setRulerActive] = useState(false)
   const [layers, setLayers] = useState<Record<LayerName, boolean>>(allLayersVisible)
   const viewportRef = useRef<ViewportHandle>(null)
@@ -25,6 +25,7 @@ export function App() {
         rulerActive={rulerActive}
         onToggleRuler={() => setRulerActive((v) => !v)}
         onExport={() => viewportRef.current?.exportGlb()}
+        onReset={reset}
       />
       <div className="main">
         <aside className="sidebar left">

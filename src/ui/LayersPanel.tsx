@@ -9,16 +9,19 @@ interface Props {
 
 const GROUPS: LayerMeta['group'][] = ['Foundation', 'Floor', 'Walls', 'Roof']
 
+const FRAME_LAYERS: LayerName[] = ['piles', 'gradeBeams', 'joists', 'wallFraming', 'rafters', 'fascia']
+
 export function LayersPanel({ layers, setLayers, hidden = [] }: Props) {
   const visibleLayers = LAYERS.filter((l) => !hidden.includes(l.name))
-  const setAll = (visible: boolean) => setLayers(Object.fromEntries(LAYER_NAMES.map((n) => [n, visible])) as Record<LayerName, boolean>)
+  const setAll = () => setLayers(Object.fromEntries(LAYER_NAMES.map((n) => [n, true])) as Record<LayerName, boolean>)
+  const frameOnly = () => setLayers(Object.fromEntries(LAYER_NAMES.map((n) => [n, FRAME_LAYERS.includes(n)])) as Record<LayerName, boolean>)
   const toggle = (name: LayerName) => setLayers({ ...layers, [name]: !layers[name] })
 
   return (
     <Section title="Layers" open>
       <div className="layers-actions">
-        <button onClick={() => setAll(true)}>All</button>
-        <button onClick={() => setAll(false)}>None</button>
+        <button onClick={setAll}>All</button>
+        <button onClick={frameOnly}>Frame only</button>
       </div>
       {GROUPS.map((group) => (
         <div key={group} className="layers-group">
