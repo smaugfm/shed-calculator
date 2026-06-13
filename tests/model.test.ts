@@ -14,7 +14,6 @@ const model = buildModel(cfg)
 
 const beam = findProfile(cfg.profiles, cfg.roles.gradeBeam)
 const joist = findProfile(cfg.profiles, cfg.roles.joist)
-const stud = findProfile(cfg.profiles, cfg.roles.stud)
 
 const role = (m: ShedModel, r: StructuralRole): Member[] => m.members.filter((x) => x.role === r)
 const kind = (m: ShedModel, k: PanelKind): Panel[] => m.panels.filter((p) => p.kind === k)
