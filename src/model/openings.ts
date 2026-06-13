@@ -1,4 +1,4 @@
-import type { Opening, TimberProfile, WallSide } from '../config/types'
+import type { OpeningConfig, TimberProfile, WallSide } from '../config/types'
 import type { Member, Vec3 } from './types'
 import { makeMember, v } from './geometry'
 import { spacedPositions } from './floor'
@@ -35,7 +35,7 @@ interface FramingProfiles {
 
 export function buildOpeningFraming(
   wall: WallFrame,
-  opening: Opening,
+  opening: OpeningConfig,
   floorTopY: number,
   bottomPlateTop: number,
   profiles: FramingProfiles,
@@ -44,8 +44,8 @@ export function buildOpeningFraming(
   const { stud, header } = profiles
   const map = wall.frameMap
   const up = wall.normal
-  const uStart = opening.offset
-  const uEnd = opening.offset + opening.width
+  const uStart = opening.offsetAlongWall
+  const uEnd = opening.offsetAlongWall + opening.width
 
   const sillY = clamp(floorTopY + opening.sillHeight, bottomPlateTop, wall.topPlatesBottom - header.width - 100)
   const maxOpeningTopY = wall.topPlatesBottom - header.width

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import type { FacadeType, Opening, OpeningType, RoofCovering, ShedConfig, ShingleSpec, StructuralRole, WallSide } from '../config/types'
-import { deriveSpacing } from '../config/defaults'
+import type { FacadeType, OpeningConfig, OpeningType, RoofCovering, ShedConfig, ShingleSpec, StructuralRole, WallSide } from '../config/types'
 import { CheckboxRow, NumberRow, Section, SelectRow, type Option } from './fields'
 import { ROLE_LABELS } from './labels'
 import { ProfileDialog } from './ProfileDialog'
@@ -45,15 +44,13 @@ export function ConfigPanel({ config, setConfig }: Props) {
       <Section title="Dimensions" open>
         <NumberRow label="Base width" value={config.base.width} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, width: v } }))} />
         <NumberRow label="Base depth" value={config.base.depth} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, depth: v } }))} />
-        <NumberRow label="Eave height (low)" value={config.heights.min} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, min: v } }))} />
-        <NumberRow label="Eave height (high)" value={config.heights.max} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, max: v } }))} />
+        <NumberRow label="Eave height (low)" value={config.heights.min} validate={(v) => (v >= config.heights.max ? 'Must be below the high eave' : undefined)} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, min: v } }))} />
+        <NumberRow label="Eave height (high)" value={config.heights.max} validate={(v) => (v <= config.heights.min ? 'Must be above the low eave' : undefined)} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, max: v } }))} />
       </Section>
 
       <Section title="Foundation (piles)">
-        <NumberRow label="Piles across width" value={config.foundation.countX} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countX: Math.max(1, v), spacingX: deriveSpacing(c.base.width, Math.max(1, v)) } }))} />
-        <NumberRow label="Piles across depth" value={config.foundation.countY} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countY: Math.max(1, v), spacingY: deriveSpacing(c.base.depth, Math.max(1, v)) } }))} />
-        <NumberRow label="Spacing X" value={config.foundation.spacingX} onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, spacingX: v } }))} />
-        <NumberRow label="Spacing Y" value={config.foundation.spacingY} onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, spacingY: v } }))} />
+        <NumberRow label="Piles across width" value={config.foundation.countX} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countX: v } }))} />
+        <NumberRow label="Piles across depth" value={config.foundation.countY} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countY: v } }))} />
       </Section>
 
       <Section title="Floor">
@@ -110,7 +107,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
           onClick={() =>
             setConfig((c) => ({
               ...c,
-              openings: [...c.openings, { id: `op-${Date.now()}`, wall: 'front', type: 'window', width: 800, height: 700, sillHeight: 1000, offset: 300 }],
+              openings: [...c.openings, { id: `op-${Date.now()}`, wall: 'front', type: 'window', width: 800, height: 700, sillHeight: 1000, offsetAlongWall: 300 }],
             }))
           }
         >
@@ -147,8 +144,8 @@ function ShingleRows({ config, setConfig }: Props) {
   )
 }
 
-function OpeningEditor({ opening, setConfig }: { opening: Opening; setConfig: Props['setConfig'] }) {
-  const update = (patch: Partial<Opening>) =>
+function OpeningEditor({ opening, setConfig }: { opening: OpeningConfig; setConfig: Props['setConfig'] }) {
+  const update = (patch: Partial<OpeningConfig>) =>
     setConfig((c) => ({ ...c, openings: c.openings.map((o) => (o.id === opening.id ? { ...o, ...patch } : o)) }))
   const remove = () => setConfig((c) => ({ ...c, openings: c.openings.filter((o) => o.id !== opening.id) }))
 
@@ -161,7 +158,7 @@ function OpeningEditor({ opening, setConfig }: { opening: Opening; setConfig: Pr
       <NumberRow label="Width" value={opening.width} onChange={(v) => update({ width: v })} />
       <NumberRow label="Height" value={opening.height} onChange={(v) => update({ height: v })} />
       <NumberRow label="Sill height" value={opening.sillHeight} onChange={(v) => update({ sillHeight: v })} />
-      <NumberRow label="Offset along wall" value={opening.offset} onChange={(v) => update({ offset: v })} />
+      <NumberRow label="Offset along wall" value={opening.offsetAlongWall} onChange={(v) => update({ offsetAlongWall: v })} />
       <button className="remove-btn" onClick={remove}>
         Remove
       </button>

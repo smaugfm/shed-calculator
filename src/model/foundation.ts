@@ -8,16 +8,17 @@ const PILE_EMBED = 400
 export function pilePositions(config: ShedConfig, edgeInset = 0): { xs: number[]; zs: number[] } {
   const { foundation, base } = config
   return {
-    xs: axisPositions(base.width, foundation.countX, foundation.spacingX, edgeInset),
-    zs: axisPositions(base.depth, foundation.countY, foundation.spacingY, edgeInset),
+    xs: axisPositions(base.width, foundation.countX, edgeInset),
+    zs: axisPositions(base.depth, foundation.countY, edgeInset),
   }
 }
 
-function axisPositions(span: number, count: number, spacing: number, edgeInset: number): number[] {
+// Evenly distribute `count` piles across the span, with the first and last at the edges
+// (inset by `edgeInset` so their faces sit on the footprint).
+function axisPositions(span: number, count: number, edgeInset: number): number[] {
   if (count <= 1) return [span / 2]
-  const used = spacing * (count - 1)
-  const start = (span - used) / 2
-  const positions = Array.from({ length: count }, (_, i) => start + i * spacing)
+  const step = span / (count - 1)
+  const positions = Array.from({ length: count }, (_, i) => i * step)
   positions[0] += edgeInset
   positions[positions.length - 1] -= edgeInset
   return positions

@@ -77,8 +77,6 @@ export interface FastenerConfig {
 export interface FoundationConfig {
   countX: number
   countY: number
-  spacingX: Millimetres
-  spacingY: Millimetres
   exposedHeight: Millimetres
 }
 
@@ -122,14 +120,14 @@ export interface RoofConfig {
 export type WallSide = 'front' | 'back' | 'left' | 'right'
 export type OpeningType = 'door' | 'window'
 
-export interface Opening {
+export interface OpeningConfig {
   id: string
   wall: WallSide
   type: OpeningType
   width: Millimetres
   height: Millimetres
   sillHeight: Millimetres
-  offset: Millimetres
+  offsetAlongWall: Millimetres
 }
 
 export type PresetName = 'light' | 'normal' | 'heavy' | 'custom'
@@ -143,7 +141,7 @@ export interface ShedConfig {
   floor: FloorConfig
   walls: WallConfig
   roof: RoofConfig
-  openings: Opening[]
+  openings: OpeningConfig[]
   fasteners: FastenerConfig
   preset: PresetName
   stock: {

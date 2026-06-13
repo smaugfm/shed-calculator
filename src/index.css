@@ -147,6 +147,20 @@ body,
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.row.invalid input {
+  border-color: #c0392b;
+  background: #fdecea;
+}
+
+.field-error {
+  flex-basis: 100%;
+  text-align: right;
+  color: #c0392b;
+  font-size: 11px;
 }
 
 .input-wrap em {
