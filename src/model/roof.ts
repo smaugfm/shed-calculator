@@ -1,16 +1,18 @@
 import type { ShedConfig } from '../config/types'
 import { findProfile } from '../config/profiles'
-import type { Member, Panel, Vec3 } from './types'
-import { add, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
+import type { Member, Panel, Piece, Vec3 } from './types'
+import { add, length, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
 import { spacedPositions } from './floor'
+import { materialSpecs, ROOFING_THICKNESS } from './materials'
+import { tilePolygon } from './tiling'
 
 const MEMBRANE_THICKNESS = 2
-const ROOFING_THICKNESS = 8
 const GAP = 1.5
 
 export interface RoofResult {
   members: Member[]
   panels: Panel[]
+  pieces: Piece[]
   rafterCount: number
   rafterEnds: number
 }
@@ -78,10 +80,22 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
   const uVec = v(xR - xL, 0, 0)
   const vVec = v(0, bearY(zEnd) - bearY(zStart), zEnd - zStart)
 
-  const panels: Panel[] = [
-    makePanel('osb-roof', origin, uVec, vVec, normal, config.roof.osbThickness, osbOffset),
-    makePanel('membrane-roof', origin, uVec, vVec, normal, MEMBRANE_THICKNESS, membraneOffset),
-    makePanel('roofing', origin, uVec, vVec, normal, ROOFING_THICKNESS, roofingOffset),
+  const panels: Panel[] = [makePanel('membrane-roof', origin, uVec, vVec, normal, MEMBRANE_THICKNESS, membraneOffset)]
+
+  // OSB and roofing are discrete pieces tiled over the roof plane (shingles overlap by exposure).
+  const specs = materialSpecs(config)
+  const uLen = xR - xL
+  const vLen = length(vVec)
+  const roofRect = [
+    { u: 0, v: 0 },
+    { u: uLen, v: 0 },
+    { u: uLen, v: vLen },
+    { u: 0, v: vLen },
+  ]
+  const roofSurface = (offset: number) => ({ origin, uDir: v(1, 0, 0), vDir: normalize(vVec), normal, offset })
+  const pieces: Piece[] = [
+    ...tilePolygon(roofSurface(osbOffset), roofRect, [], specs['osb-roof']),
+    ...tilePolygon(roofSurface(roofingOffset), roofRect, [], specs.roofing),
   ]
 
   // Soffit closes the overhang ring from below, on the rafter-underside plane.
@@ -112,5 +126,5 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
     makeMember('fascia', fascia, v(xR, trimY(zStart), zStart), v(xR, trimY(zEnd), zEnd), v(0, 1, 0)),
   )
 
-  return { members, panels, rafterCount: rafterXs.length, rafterEnds: rafterXs.length * 2 }
+  return { members, panels, pieces, rafterCount: rafterXs.length, rafterEnds: rafterXs.length * 2 }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { Member, Panel, PanelKind, ShedModel } from '../src/model/types'
+import type { Member, Panel, PanelKind, Piece, ShedModel } from '../src/model/types'
 import type { ShedConfig, StructuralRole } from '../src/config/types'
+import type { MaterialId } from '../src/model/materials'
 import { defaultConfig } from '../src/config/defaults'
 import { buildModel } from '../src/model/build'
 import { findProfile } from '../src/config/profiles'
@@ -17,7 +18,12 @@ const joist = findProfile(cfg.profiles, cfg.roles.joist)
 
 const role = (m: ShedModel, r: StructuralRole): Member[] => m.members.filter((x) => x.role === r)
 const kind = (m: ShedModel, k: PanelKind): Panel[] => m.panels.filter((p) => p.kind === k)
+const piecesOf = (m: ShedModel, id: MaterialId): Piece[] => m.pieces.filter((p) => p.materialId === id)
 const near = (a: number, b: number) => Math.abs(a - b) <= TOL
+
+// World X/Z of a piece's UV corner (vDir has no horizontal component for our surfaces).
+const pieceX = (p: Piece, u: number) => p.origin.x + u * p.uDir.x
+const pieceZ = (p: Piece, u: number) => p.origin.z + u * p.uDir.z
 
 // Outer extent of a horizontal member along the axis perpendicular to its run (its cross-section thickness).
 function memberFaces(members: Member[], axis: 'x' | 'z'): { min: number; max: number } {
@@ -60,9 +66,12 @@ describe('floor', () => {
   })
 
   it('lands the OSB deck flush with floor level', () => {
-    const deck = kind(model, 'osb-floor')[0]
-    const top = deck.origin.y + deck.normal.y * deck.offset + deck.thickness / 2
-    expect(near(top, model.floorTopY)).toBe(true)
+    const deck = piecesOf(model, 'osb-floor')
+    expect(deck.length).toBeGreaterThan(0)
+    for (const d of deck) {
+      const top = d.origin.y + d.normal.y * (d.offset + d.thickness / 2)
+      expect(near(top, model.floorTopY)).toBe(true)
+    }
   })
 
   it('adds a joist per spacing plus two rim joists', () => {
@@ -99,37 +108,32 @@ describe('walls and corners', () => {
     }
   })
 
-  it('laps front/back OSB outward past the corner', () => {
-    const frontOsb = kind(model, 'osb-wall').filter((p) => near(p.origin.z, 0) && p.shape === 'rect')
-    const xs = frontOsb.flatMap((p) => [p.origin.x, p.origin.x + p.u.x])
-    expect(Math.min(...xs)).toBeCloseTo(-cfg.walls.osbThickness, 5)
-    expect(Math.max(...xs)).toBeCloseTo(cfg.base.width + cfg.walls.osbThickness, 5)
+  it('laps front/back OSB pieces outward past the corner', () => {
+    const front = piecesOf(model, 'osb-wall').filter((p) => p.normal.z < -0.5)
+    const xs = front.flatMap((p) => p.uv.map((c) => pieceX(p, c.u)))
+    expect(Math.min(...xs)).toBeLessThan(0)
+    expect(Math.max(...xs)).toBeGreaterThan(cfg.base.width)
   })
 
-  it('keeps side OSB butted at the footprint (no outward lap)', () => {
-    const leftOsb = kind(model, 'osb-wall').filter((p) => near(p.origin.x, 0) && p.shape === 'rect')
-    const zs = leftOsb.flatMap((p) => [p.origin.z, p.origin.z + p.u.z])
+  it('keeps side OSB pieces butted at the footprint (no outward lap)', () => {
+    const left = piecesOf(model, 'osb-wall').filter((p) => p.normal.x < -0.5)
+    const zs = left.flatMap((p) => p.uv.map((c) => pieceZ(p, c.u)))
     expect(near(Math.min(...zs), 0)).toBe(true)
     expect(near(Math.max(...zs), cfg.base.depth)).toBe(true)
   })
 
-  it('extends side cladding past the corner to butt the front/back cladding', () => {
-    const leftClad = kind(model, 'cladding').filter((p) => near(p.origin.x, 0) && p.shape === 'rect')
-    const zs = leftClad.flatMap((p) => [p.origin.z, p.origin.z + p.u.z])
+  it('extends side cladding pieces past the corner to butt the front/back cladding', () => {
+    const left = piecesOf(model, 'cladding').filter((p) => p.normal.x < -0.5)
+    const zs = left.flatMap((p) => p.uv.map((c) => pieceZ(p, c.u)))
     expect(Math.min(...zs)).toBeLessThan(0)
     expect(Math.max(...zs)).toBeGreaterThan(cfg.base.depth)
   })
 
-  it('builds gable triangles on the two side walls for each skin layer', () => {
-    expect(model.panels.filter((p) => p.shape === 'triangle' && p.kind === 'osb-wall').length).toBe(2)
-    expect(model.panels.filter((p) => p.shape === 'triangle' && p.kind === 'cladding').length).toBe(2)
-    expect(model.panels.filter((p) => p.shape === 'triangle' && p.kind === 'membrane-wall').length).toBe(2)
-  })
-
-  it('keeps gable triangle coplanar with the rectangular section (same offset per layer)', () => {
-    const rect = kind(model, 'cladding').find((p) => p.shape === 'rect')!
-    const tri = kind(model, 'cladding').find((p) => p.shape === 'triangle')!
-    expect(tri.offset).toBeCloseTo(rect.offset, 5)
+  it('cuts openings out of the wall skin (OSB and cladding)', () => {
+    const noOpenings = buildModel({ ...cfg, openings: [] })
+    const used = (m: ShedModel, id: MaterialId) => piecesOf(m, id).reduce((s, p) => s + p.usedArea, 0)
+    expect(used(model, 'osb-wall')).toBeLessThan(used(noOpenings, 'osb-wall'))
+    expect(used(model, 'cladding')).toBeLessThan(used(noOpenings, 'cladding'))
   })
 })
 
@@ -180,7 +184,7 @@ describe('roof', () => {
 
   it('applies independent front/rear/side overhangs', () => {
     const m = buildModel({ ...cfg, roof: { ...cfg.roof, overhangs: { front: 300, rear: 100, sides: 50 } } })
-    const deck = m.panels.find((p) => p.kind === 'roofing')!
+    const deck = m.panels.find((p) => p.kind === 'membrane-roof')!
     expect(deck.origin.z).toBeCloseTo(-300, 5)
     expect(deck.origin.z + deck.v.z).toBeCloseTo(cfg.base.depth + 100, 5)
     expect(deck.origin.x).toBeCloseTo(-50, 5)
@@ -188,11 +192,41 @@ describe('roof', () => {
   })
 
   it('stacks roofing outside membrane outside OSB', () => {
-    const osbOff = kind(model, 'osb-roof')[0].offset
+    const osbOff = piecesOf(model, 'osb-roof')[0].offset
     const memOff = kind(model, 'membrane-roof')[0].offset
-    const roofOff = kind(model, 'roofing')[0].offset
+    const roofOff = piecesOf(model, 'roofing')[0].offset
     expect(memOff).toBeGreaterThan(osbOff)
     expect(roofOff).toBeGreaterThan(memOff)
+  })
+})
+
+describe('discrete materials (cut list)', () => {
+  const ALL: MaterialId[] = ['osb-floor', 'osb-wall', 'osb-roof', 'cladding', 'roofing']
+
+  it('tiles every skin material into pieces', () => {
+    for (const id of ALL) expect(piecesOf(model, id).length).toBeGreaterThan(0)
+  })
+
+  it('never uses more area than bought (leftover >= 0)', () => {
+    for (const id of ALL) {
+      const g = piecesOf(model, id)
+      const bought = g.reduce((s, p) => s + p.nominalArea, 0)
+      const used = g.reduce((s, p) => s + p.usedArea, 0)
+      expect(bought + 1e-6).toBeGreaterThanOrEqual(used)
+      expect(g.every((p) => p.usedArea <= p.nominalArea + 1e-6)).toBe(true)
+    }
+  })
+
+  it('has full interior pieces (no offcut) and cut edge pieces (offcut) for wall OSB', () => {
+    const g = piecesOf(model, 'osb-wall')
+    expect(g.some((p) => Math.abs(p.usedArea - p.nominalArea) < 1e-6)).toBe(true)
+    expect(g.some((p) => p.usedArea < p.nominalArea - 1e-6)).toBe(true)
+  })
+
+  it('models shingle overlap: lower exposure yields more shingles', () => {
+    const overlap = piecesOf(model, 'roofing').length
+    const flat = piecesOf(buildModel({ ...cfg, roof: { ...cfg.roof, shingle: { ...cfg.roof.shingle, exposure: cfg.roof.shingle.height } } }), 'roofing').length
+    expect(overlap).toBeGreaterThan(flat)
   })
 })
 

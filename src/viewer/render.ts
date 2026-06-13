@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import type { ShedConfig } from '../config/types'
-import type { Member, Panel, ShedModel, Vec3 } from '../model/types'
-import type { FacadeType, RoofCovering } from '../config/types'
-import { getCladdingTexture, getMembraneTexture, getMetalShingleTexture, getMetalTexture, getOsbTexture, getShingleTexture } from './textures'
+import type { Member, Panel, Piece, ShedModel, Vec3 } from '../model/types'
+import type { MaterialId } from '../model/materials'
+import { getMembraneTexture, getOsbTexture } from './textures'
 
 export type LayerName =
   | 'piles'
@@ -76,23 +76,6 @@ function osbMaterial(uLen: number, vLen: number): THREE.MeshStandardMaterial {
   return mat
 }
 
-function facadeMaterial(type: FacadeType, uLen: number, vLen: number): THREE.MeshStandardMaterial {
-  if (type === 'metal') {
-    const tex = getMetalTexture().clone()
-    tex.needsUpdate = true
-    tex.repeat.set(Math.max(1, uLen / 1000), Math.max(1, vLen / 2400))
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.6, side: THREE.DoubleSide })
-    mat.userData.disposable = true
-    return mat
-  }
-  const tex = getCladdingTexture().clone()
-  tex.needsUpdate = true
-  tex.repeat.set(Math.max(1, uLen / 1600), Math.max(1, vLen / 3000))
-  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, side: THREE.DoubleSide })
-  mat.userData.disposable = true
-  return mat
-}
-
 function membraneMaterial(uLen: number, vLen: number): THREE.MeshStandardMaterial {
   const tex = getMembraneTexture().clone()
   tex.needsUpdate = true
@@ -102,21 +85,31 @@ function membraneMaterial(uLen: number, vLen: number): THREE.MeshStandardMateria
   return mat
 }
 
-function roofingMaterial(covering: RoofCovering, uLen: number, vLen: number): THREE.MeshStandardMaterial {
-  if (covering === 'ventilated') {
-    const tex = getMetalShingleTexture().clone()
-    tex.needsUpdate = true
-    tex.repeat.set(Math.max(1, uLen / 1500), Math.max(1, vLen / 1500))
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide })
-    mat.userData.disposable = true
-    return mat
-  }
-  const tex = getShingleTexture().clone()
+function osbPieceMaterial(): THREE.MeshStandardMaterial {
+  const tex = getOsbTexture().clone()
   tex.needsUpdate = true
-  tex.repeat.set(Math.max(1, uLen / 1000), Math.max(1, vLen / 1000))
-  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, side: THREE.DoubleSide })
+  tex.repeat.set(1 / 600, 1 / 600)
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 })
   mat.userData.disposable = true
   return mat
+}
+
+function solidPiece(color: number, metalness: number): THREE.MeshStandardMaterial {
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: metalness > 0 ? 0.5 : 0.85, metalness })
+  mat.userData.disposable = true
+  return mat
+}
+
+function pieceMesh(piece: Piece, material: THREE.Material): THREE.Mesh {
+  const shape = new THREE.Shape()
+  piece.uv.forEach((p, i) => (i === 0 ? shape.moveTo(p.u, p.v) : shape.lineTo(p.u, p.v)))
+  const geom = new THREE.ExtrudeGeometry(shape, { depth: piece.thickness, bevelEnabled: false })
+  const normal = vec(piece.normal)
+  const mesh = new THREE.Mesh(geom, material)
+  const m = new THREE.Matrix4().makeBasis(vec(piece.uDir), vec(piece.vDir), normal)
+  m.setPosition(vec(piece.origin).add(normal.clone().multiplyScalar(piece.offset - piece.thickness / 2)))
+  mesh.applyMatrix4(m)
+  return withEdges(mesh)
 }
 
 function orientedBox(thickness: number, width: number, start: THREE.Vector3, end: THREE.Vector3, up: THREE.Vector3, material: THREE.Material): THREE.Mesh {
@@ -187,15 +180,6 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
 
   for (const panel of model.panels) {
     switch (panel.kind) {
-      case 'osb-floor':
-        layers.floorDeck.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
-        break
-      case 'osb-wall':
-        layers.wallOsb.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
-        break
-      case 'osb-roof':
-        layers.roofOsb.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
-        break
       case 'soffit':
         layers.soffit.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
         break
@@ -205,16 +189,23 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
       case 'membrane-roof':
         layers.roofMembrane.add(panelMesh(panel, membraneMaterial(len(panel.u), len(panel.v))))
         break
-      case 'cladding':
-        layers.cladding.add(panelMesh(panel, facadeMaterial(config.walls.facadeType, len(panel.u), len(panel.v))))
-        break
-      case 'roofing':
-        layers.roofing.add(panelMesh(panel, roofingMaterial(config.roof.covering, len(panel.u), len(panel.v))))
-        break
       default:
         break
     }
   }
+
+  const pieceLayer: Record<MaterialId, LayerName> = {
+    'osb-floor': 'floorDeck',
+    'osb-wall': 'wallOsb',
+    'osb-roof': 'roofOsb',
+    cladding: 'cladding',
+    roofing: 'roofing',
+  }
+  const osbMat = osbPieceMaterial()
+  const claddingMat = config.walls.facadeType === 'metal' ? solidPiece(0x9aa3ab, 0.5) : solidPiece(0x9c7649, 0)
+  const roofingMat = config.roof.covering === 'ventilated' ? solidPiece(0x8a9299, 0.5) : solidPiece(0x33363b, 0)
+  const pieceMat = (id: MaterialId): THREE.Material => (id === 'cladding' ? claddingMat : id === 'roofing' ? roofingMat : osbMat)
+  for (const piece of model.pieces) layers[pieceLayer[piece.materialId]].add(pieceMesh(piece, pieceMat(piece.materialId)))
 
   const center = new THREE.Vector3(
     (model.bbox.min.x + model.bbox.max.x) / 2,

@@ -1,9 +1,28 @@
 import type { OpeningType, StructuralRole, WallSide } from '../config/types'
+import type { MaterialId } from './materials'
 
 export interface Vec3 {
   x: number
   y: number
   z: number
+}
+
+export interface Vec2 {
+  u: number
+  v: number
+}
+
+export interface Piece {
+  materialId: MaterialId
+  uv: Vec2[]
+  origin: Vec3
+  uDir: Vec3
+  vDir: Vec3
+  normal: Vec3
+  offset: number
+  thickness: number
+  nominalArea: number
+  usedArea: number
 }
 
 export interface Member {
@@ -73,6 +92,7 @@ export interface JointTally {
 export interface ShedModel {
   members: Member[]
   panels: Panel[]
+  pieces: Piece[]
   piles: Pile[]
   openings: ResolvedOpening[]
   joints: JointTally

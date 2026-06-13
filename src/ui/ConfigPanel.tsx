@@ -1,4 +1,4 @@
-import type { FacadeType, Opening, OpeningType, RoofCovering, ShedConfig, StructuralRole, WallSide } from '../config/types'
+import type { FacadeType, Opening, OpeningType, RoofCovering, ShedConfig, ShingleSpec, StructuralRole, WallSide } from '../config/types'
 import { deriveSpacing } from '../config/defaults'
 import { CheckboxRow, NumberRow, Section, SelectRow, type Option } from './fields'
 
@@ -72,6 +72,10 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow label="Batten spacing" value={config.walls.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, battenSpacing: v } }))} />
         <NumberRow label="OSB thickness" value={config.walls.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))} />
         <SelectRow label="Facade" value={config.walls.facadeType} options={FACADE_OPTIONS} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, facadeType: v as FacadeType } }))} />
+        <NumberRow label="Cladding board width" value={config.walls.cladding.width} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, width: v } } }))} />
+        <NumberRow label="Cladding board length" value={config.walls.cladding.length} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, length: v } } }))} />
+        <NumberRow label="OSB sheet width" value={config.stock.sheetWidth} onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))} />
+        <NumberRow label="OSB sheet height" value={config.stock.sheetHeight} onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))} />
         <SelectRow label="Bottom plate" value={String(config.walls.bottomPlateCount)} options={PLATE_COUNT_OPTIONS} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, bottomPlateCount: Number(v) as 1 | 2 } }))} />
         <SelectRow label="Top plate" value={String(config.walls.topPlateCount)} options={PLATE_COUNT_OPTIONS} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, topPlateCount: Number(v) as 1 | 2 } }))} />
       </Section>
@@ -82,6 +86,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow label="Batten spacing" value={config.roof.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, battenSpacing: v } }))} />
         <NumberRow label="Rafter spacing" value={config.roof.rafterSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, rafterSpacing: v } }))} />
         <NumberRow label="OSB thickness" value={config.roof.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))} />
+        <ShingleRows config={config} setConfig={setConfig} />
         <NumberRow label="Overhang front" value={config.roof.overhangs.front} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, front: v } } }))} />
         <NumberRow label="Overhang rear" value={config.roof.overhangs.rear} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, rear: v } } }))} />
         <NumberRow label="Overhang sides" value={config.roof.overhangs.sides} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, sides: v } } }))} />
@@ -128,6 +133,20 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow label="Roof covering rate / m²" value={config.fasteners.roofCovering.ratePerSqm} step={1} suffix="/m²" onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, ratePerSqm: v } } }))} />
       </Section>
     </div>
+  )
+}
+
+function ShingleRows({ config, setConfig }: Props) {
+  const key = config.roof.covering === 'shingles' ? 'shingle' : 'metalShingle'
+  const sh = config.roof[key]
+  const set = (patch: Partial<ShingleSpec>) => setConfig((c) => ({ ...c, roof: { ...c.roof, [key]: { ...c.roof[key], ...patch } } }))
+  const label = config.roof.covering === 'shingles' ? 'Shingle' : 'Metal tile'
+  return (
+    <>
+      <NumberRow label={`${label} width`} value={sh.width} onChange={(v) => set({ width: v })} />
+      <NumberRow label={`${label} height`} value={sh.height} onChange={(v) => set({ height: v })} />
+      <NumberRow label={`${label} exposure`} value={sh.exposure} onChange={(v) => set({ exposure: v })} />
+    </>
   )
 }
 

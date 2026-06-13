@@ -1,8 +1,10 @@
 import type { ShedConfig } from '../config/types'
 import { findProfile } from '../config/profiles'
-import type { Member, Panel } from './types'
-import { makeMember, makePanel, v } from './geometry'
+import type { Member, Piece } from './types'
+import { makeMember, v } from './geometry'
 import { pilePositions } from './foundation'
+import { materialSpecs } from './materials'
+import { tilePolygon } from './tiling'
 
 export function spacedPositions(span: number, spacing: number): number[] {
   if (spacing <= 0 || !Number.isFinite(spacing)) return [0, span]
@@ -14,7 +16,7 @@ export function spacedPositions(span: number, spacing: number): number[] {
 
 export interface FloorResult {
   members: Member[]
-  panels: Panel[]
+  pieces: Piece[]
   floorTopY: number
   joistCount: number
   joistEnds: number
@@ -65,11 +67,21 @@ export function buildFloor(config: ShedConfig): FloorResult {
     makeMember('joist', joist, v(0, joistCenterY, base.depth - halfT), v(base.width, joistCenterY, base.depth - halfT), v(0, 1, 0)),
   )
 
-  const deck = makePanel('osb-floor', v(0, floorTopY, 0), v(base.width, 0, 0), v(0, 0, base.depth), v(0, 1, 0), floor.deckThickness, -floor.deckThickness / 2)
+  const deck = tilePolygon(
+    { origin: v(0, floorTopY, 0), uDir: v(1, 0, 0), vDir: v(0, 0, 1), normal: v(0, 1, 0), offset: -floor.deckThickness / 2 },
+    [
+      { u: 0, v: 0 },
+      { u: base.width, v: 0 },
+      { u: base.width, v: base.depth },
+      { u: 0, v: base.depth },
+    ],
+    [],
+    materialSpecs(config)['osb-floor'],
+  )
 
   return {
     members,
-    panels: [deck],
+    pieces: deck,
     floorTopY,
     joistCount: joistXs.length,
     joistEnds: joistXs.length * 2,

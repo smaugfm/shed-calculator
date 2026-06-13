@@ -94,8 +94,15 @@ export interface WallConfig {
   battenSpacing: Millimetres
   osbThickness: Millimetres
   facadeType: FacadeType
+  cladding: { width: Millimetres; length: Millimetres }
   topPlateCount: 1 | 2
   bottomPlateCount: 1 | 2
+}
+
+export interface ShingleSpec {
+  width: Millimetres
+  height: Millimetres
+  exposure: Millimetres
 }
 
 export type RoofCovering = 'shingles' | 'ventilated'
@@ -107,6 +114,8 @@ export interface RoofConfig {
   battenSpacing: Millimetres
   rafterSpacing: Millimetres
   osbThickness: Millimetres
+  shingle: ShingleSpec
+  metalShingle: ShingleSpec
   overhangs: { front: Millimetres; rear: Millimetres; sides: Millimetres }
 }
 

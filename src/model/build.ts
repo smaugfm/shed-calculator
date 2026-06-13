@@ -1,5 +1,5 @@
 import type { ShedConfig } from '../config/types'
-import type { Member, Panel, ShedModel, Vec3 } from './types'
+import type { Member, Panel, Piece, ShedModel, Vec3 } from './types'
 import { add, resetIds } from './geometry'
 import { buildFoundation } from './foundation'
 import { buildFloor } from './floor'
@@ -15,7 +15,8 @@ export function buildModel(config: ShedConfig): ShedModel {
   const roof = buildRoof(config, floor.floorTopY)
 
   const members: Member[] = [...floor.members, ...walls.members, ...roof.members]
-  const panels: Panel[] = [...floor.panels, ...walls.panels, ...roof.panels]
+  const panels: Panel[] = [...walls.panels, ...roof.panels]
+  const pieces: Piece[] = [...floor.pieces, ...walls.pieces, ...roof.pieces]
 
   const joints = {
     framingJoints: floor.framingJoints + walls.framingJoints,
@@ -26,6 +27,7 @@ export function buildModel(config: ShedConfig): ShedModel {
   return {
     members,
     panels,
+    pieces,
     piles,
     openings: walls.openings,
     joints,

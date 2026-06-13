@@ -1,22 +1,20 @@
-import type { FacadeType, ShedConfig, WallSide } from '../config/types'
+import type { ShedConfig, WallSide } from '../config/types'
 import { findProfile } from '../config/profiles'
-import type { Member, Panel, PanelKind, ResolvedOpening } from './types'
+import type { Member, Panel, Piece, ResolvedOpening } from './types'
 import { add, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
 import { spacedPositions } from './floor'
 import { buildOpeningFraming, type WallFrame } from './openings'
 import { decomposeWall, subtractIntervals, type Interval, type UvRect } from './sheets'
+import { FACADE_THICKNESS, materialSpecs } from './materials'
+import { tilePolygon, type Surface } from './tiling'
 
 const MEMBRANE_THICKNESS = 2
 const GAP = 1.5
 
-const FACADE_THICKNESS: Record<FacadeType, number> = {
-  cladding: 20,
-  metal: 18,
-}
-
 export interface WallsResult {
   members: Member[]
   panels: Panel[]
+  pieces: Piece[]
   openings: ResolvedOpening[]
   framingJoints: number
 }
@@ -130,37 +128,51 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
 
   const fac = FACADE_THICKNESS[config.walls.facadeType]
   const osb = config.walls.osbThickness
-  const layers: Array<{ kind: PanelKind; thickness: number; offset: number }> = [
-    { kind: 'osb-wall', thickness: osb, offset: osb / 2 },
-    { kind: 'membrane-wall', thickness: MEMBRANE_THICKNESS, offset: osb + GAP + MEMBRANE_THICKNESS / 2 },
-    { kind: 'cladding', thickness: fac, offset: osb + 2 * GAP + MEMBRANE_THICKNESS + batten.thickness + GAP + fac / 2 },
-  ]
+  const osbOffset = osb / 2
+  const membraneOffset = osb + GAP + MEMBRANE_THICKNESS / 2
+  const claddingOffset = osb + 2 * GAP + MEMBRANE_THICKNESS + batten.thickness + GAP + fac / 2
+  const lapOf = (offset: number, thickness: number) => (gableTopYAt ? offset - thickness / 2 : offset + thickness / 2)
 
-  // Each skin layer wraps the corner: front/back lap outward (offset + thk/2), sides butt to the
-  // front/back inner face (offset - thk/2). Rectangular body and gable triangle share the same lap.
+  // Membrane stays a continuous panel (a roll), lapping the corner like the skin layers.
   const panels: Panel[] = []
-  for (const layer of layers) {
-    const lap = gableTopYAt ? layer.offset - layer.thickness / 2 : layer.offset + layer.thickness / 2
-    for (const rect of decomposeWall(-lap, L + lap, floorTopY, rectTopY, holes)) {
-      const origin = map(rect.u0, rect.v0)
-      panels.push(makePanel(layer.kind, origin, sub(map(rect.u1, rect.v0), origin), sub(map(rect.u0, rect.v1), origin), normal, layer.thickness, layer.offset))
-    }
-    if (gableTopYAt) {
-      const origin = map(-lap, rectTopY)
-      panels.push(makePanel(layer.kind, origin, sub(map(L, rectTopY), origin), sub(map(-lap, gableTopYAt(-lap)), origin), normal, layer.thickness, layer.offset, 'triangle'))
-    }
+  const mLap = lapOf(membraneOffset, MEMBRANE_THICKNESS)
+  for (const rect of decomposeWall(-mLap, L + mLap, floorTopY, rectTopY, holes)) {
+    const o = map(rect.u0, rect.v0)
+    panels.push(makePanel('membrane-wall', o, sub(map(rect.u1, rect.v0), o), sub(map(rect.u0, rect.v1), o), normal, MEMBRANE_THICKNESS, membraneOffset))
+  }
+  if (gableTopYAt) {
+    const o = map(-mLap, rectTopY)
+    panels.push(makePanel('membrane-wall', o, sub(map(L, rectTopY), o), sub(map(-mLap, gableTopYAt(-mLap)), o), normal, MEMBRANE_THICKNESS, membraneOffset, 'triangle'))
   }
 
-  return { members, panels, openings, framingJoints }
+  // OSB and cladding are discrete pieces, cut to the wall outline (trapezoid for gables) and openings.
+  const specs = materialSpecs(config)
+  const origin = map(0, floorTopY)
+  const topAt = (u: number) => (gableTopYAt ? gableTopYAt(u) : rectTopY) - floorTopY
+  const holesUv = holes.map((h) => ({ u0: h.u0, u1: h.u1, v0: h.v0 - floorTopY, v1: h.v1 - floorTopY }))
+  const outline = (lap: number) => [
+    { u: -lap, v: 0 },
+    { u: L + lap, v: 0 },
+    { u: L + lap, v: topAt(L + lap) },
+    { u: -lap, v: topAt(-lap) },
+  ]
+  const surface = (offset: number): Surface => ({ origin, uDir: tangent, vDir: v(0, 1, 0), normal, offset })
+  const pieces: Piece[] = [
+    ...tilePolygon(surface(osbOffset), outline(lapOf(osbOffset, osb)), holesUv, specs['osb-wall']),
+    ...tilePolygon(surface(claddingOffset), outline(lapOf(claddingOffset, fac)), holesUv, specs.cladding),
+  ]
+
+  return { members, panels, pieces, openings, framingJoints }
 }
 
 export function buildWalls(config: ShedConfig, floorTopY: number): WallsResult {
   const sides: WallSide[] = ['front', 'back', 'left', 'right']
-  const result: WallsResult = { members: [], panels: [], openings: [], framingJoints: 0 }
+  const result: WallsResult = { members: [], panels: [], pieces: [], openings: [], framingJoints: 0 }
   for (const side of sides) {
     const wall = buildWall(side, config, floorTopY)
     result.members.push(...wall.members)
     result.panels.push(...wall.panels)
+    result.pieces.push(...wall.pieces)
     result.openings.push(...wall.openings)
     result.framingJoints += wall.framingJoints
   }
