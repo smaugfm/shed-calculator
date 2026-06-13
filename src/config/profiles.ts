@@ -12,6 +12,7 @@ export const PROFILE_LIBRARY: TimberProfile[] = [
   { id: 'beam-45x195', label: 'Beam 45×195', thickness: 45, width: 195 },
   { id: 'beam-70x195', label: 'Beam 70×195', thickness: 70, width: 195 },
   { id: 'header-90x145', label: 'Header 90×145', thickness: 90, width: 145 },
+  { id: 'fascia-25x225', label: 'Fascia 25×225', thickness: 25, width: 225 },
 ]
 
 export function findProfile(profiles: TimberProfile[], id: string): TimberProfile {

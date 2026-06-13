@@ -1,12 +1,11 @@
 import type { FacadeType, ShedConfig, WallSide } from '../config/types'
 import { findProfile } from '../config/profiles'
 import type { Member, Panel, PanelKind, ResolvedOpening } from './types'
-import { add, makeMember, makePanel, scale, sub, v } from './geometry'
+import { add, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
 import { spacedPositions } from './floor'
 import { buildOpeningFraming, type WallFrame } from './openings'
 import { decomposeWall, subtractIntervals, type Interval, type UvRect } from './sheets'
 
-const BATTEN_SPACING = 600
 const MEMBRANE_THICKNESS = 2
 const GAP = 1.5
 
@@ -118,12 +117,14 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
     members.push(makeMember('plate', plate, frameMap(fStart, gableTopYAt(fStart)), frameMap(fEnd, gableTopYAt(fEnd)), normal))
   }
 
+  // up = horizontal wall tangent so the batten's thickness (not width) forms the vent cavity depth.
+  const tangent = normalize(sub(map(1, 0), map(0, 0)))
   const battenFaceOffset = config.walls.osbThickness + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
-  for (const u of spacedPositions(L, BATTEN_SPACING)) {
+  for (const u of spacedPositions(L, config.walls.battenSpacing)) {
     const top = gableTopYAt ? gableTopYAt(u) - slope * (batten.thickness / 2) : rectTopY
     const battenHoles: Interval[] = holes.filter((h) => u >= h.u0 && u <= h.u1).map((h) => [h.v0, h.v1] as Interval)
     for (const [s0, s1] of subtractIntervals([floorTopY, top], battenHoles)) {
-      members.push(makeMember('batten', batten, add(map(u, s0), scale(normal, battenFaceOffset)), add(map(u, s1), scale(normal, battenFaceOffset)), normal))
+      members.push(makeMember('batten', batten, add(map(u, s0), scale(normal, battenFaceOffset)), add(map(u, s1), scale(normal, battenFaceOffset)), tangent))
     }
   }
 

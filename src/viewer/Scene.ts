@@ -39,7 +39,6 @@ export class Scene {
     this.controls.target.set(1500, 1200, 1200)
 
     this.addLights()
-    this.addGround()
 
     this.resizeObserver = new ResizeObserver(() => this.resize())
     this.resizeObserver.observe(container)
@@ -54,10 +53,6 @@ export class Scene {
     this.scene.add(sun)
   }
 
-  private addGround(): void {
-    const grid = new THREE.GridHelper(40000, 80, 0xc0c8d0, 0xdfe4ea)
-    this.scene.add(grid)
-  }
 
   setModel(result: RenderResult): void {
     if (this.modelGroup) {
@@ -104,6 +99,10 @@ export class Scene {
 
 function disposeGroup(group: THREE.Group): void {
   group.traverse((obj) => {
+    if (obj instanceof THREE.LineSegments) {
+      obj.geometry.dispose()
+      return
+    }
     if (!(obj instanceof THREE.Mesh)) return
     obj.geometry.dispose()
     const materials = Array.isArray(obj.material) ? obj.material : [obj.material]

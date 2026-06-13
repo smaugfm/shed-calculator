@@ -1,6 +1,6 @@
 import type { FacadeType, Opening, OpeningType, RoofCovering, ShedConfig, StructuralRole, WallSide } from '../config/types'
 import { deriveSpacing } from '../config/defaults'
-import { NumberRow, Section, SelectRow, type Option } from './fields'
+import { CheckboxRow, NumberRow, Section, SelectRow, type Option } from './fields'
 
 interface Props {
   config: ShedConfig
@@ -15,6 +15,7 @@ const ROLE_LABELS: Record<StructuralRole, string> = {
   plate: 'Wall plate',
   header: 'Opening header',
   batten: 'Batten',
+  fascia: 'Fascia / barge',
 }
 
 const FACADE_OPTIONS: Option[] = [
@@ -68,6 +69,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
 
       <Section title="Walls">
         <NumberRow label="Stud spacing" value={config.walls.studSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, studSpacing: v } }))} />
+        <NumberRow label="Batten spacing" value={config.walls.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, battenSpacing: v } }))} />
         <NumberRow label="OSB thickness" value={config.walls.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))} />
         <SelectRow label="Facade" value={config.walls.facadeType} options={FACADE_OPTIONS} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, facadeType: v as FacadeType } }))} />
         <SelectRow label="Bottom plate" value={String(config.walls.bottomPlateCount)} options={PLATE_COUNT_OPTIONS} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, bottomPlateCount: Number(v) as 1 | 2 } }))} />
@@ -75,10 +77,14 @@ export function ConfigPanel({ config, setConfig }: Props) {
       </Section>
 
       <Section title="Roof (mono-pitch)">
-        <SelectRow label="Covering" value={config.roof.covering} options={[{ value: 'shingles', label: 'Asphalt shingles (EPDM)' }, { value: 'ventilated', label: 'Ventilated roofing' }]} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, covering: v as RoofCovering } }))} />
+        <SelectRow label="Covering" value={config.roof.covering} options={[{ value: 'shingles', label: 'Asphalt shingles (EPDM)' }, { value: 'ventilated', label: 'Ventilated metal' }]} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, covering: v as RoofCovering } }))} />
+        <CheckboxRow label="Battens" checked={config.roof.covering === 'ventilated' && config.roof.battens} disabled={config.roof.covering !== 'ventilated'} title={config.roof.covering !== 'ventilated' ? 'Battens apply to ventilated roofing only' : 'Counter-battens forming the roof vent cavity'} onChange={(b) => setConfig((c) => ({ ...c, roof: { ...c.roof, battens: b } }))} />
+        <NumberRow label="Batten spacing" value={config.roof.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, battenSpacing: v } }))} />
         <NumberRow label="Rafter spacing" value={config.roof.rafterSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, rafterSpacing: v } }))} />
         <NumberRow label="OSB thickness" value={config.roof.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))} />
-        <NumberRow label="Overhang" value={config.roof.overhang} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhang: v } }))} />
+        <NumberRow label="Overhang front" value={config.roof.overhangs.front} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, front: v } } }))} />
+        <NumberRow label="Overhang rear" value={config.roof.overhangs.rear} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, rear: v } } }))} />
+        <NumberRow label="Overhang sides" value={config.roof.overhangs.sides} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, sides: v } } }))} />
       </Section>
 
       <Section title="Timber profiles (per role)">

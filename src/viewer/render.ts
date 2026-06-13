@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import type { ShedConfig } from '../config/types'
 import type { Member, Panel, ShedModel, Vec3 } from '../model/types'
-import type { FacadeType } from '../config/types'
-import { getCladdingTexture, getMetalTexture, getOsbTexture } from './textures'
+import type { FacadeType, RoofCovering } from '../config/types'
+import { getCladdingTexture, getMembraneTexture, getMetalShingleTexture, getMetalTexture, getOsbTexture, getShingleTexture } from './textures'
 
 export type LayerName =
   | 'piles'
@@ -15,6 +15,9 @@ export type LayerName =
   | 'battens'
   | 'cladding'
   | 'rafters'
+  | 'fascia'
+  | 'soffit'
+  | 'roofBattens'
   | 'roofOsb'
   | 'roofMembrane'
   | 'roofing'
@@ -36,8 +39,11 @@ export const LAYERS: LayerMeta[] = [
   { name: 'battens', label: 'Battens', group: 'Walls' },
   { name: 'cladding', label: 'Cladding', group: 'Walls' },
   { name: 'rafters', label: 'Rafters', group: 'Roof' },
+  { name: 'fascia', label: 'Fascia & barge', group: 'Roof' },
+  { name: 'soffit', label: 'Soffit', group: 'Roof' },
   { name: 'roofOsb', label: 'Roof OSB', group: 'Roof' },
   { name: 'roofMembrane', label: 'Roof membrane', group: 'Roof' },
+  { name: 'roofBattens', label: 'Roof battens', group: 'Roof' },
   { name: 'roofing', label: 'Roofing', group: 'Roof' },
 ]
 
@@ -45,8 +51,13 @@ export const LAYER_NAMES: LayerName[] = LAYERS.map((l) => l.name)
 
 const timber = new THREE.MeshStandardMaterial({ color: 0xc8a165, roughness: 0.85 })
 const batten = new THREE.MeshStandardMaterial({ color: 0xb8915a, roughness: 0.85 })
-const membrane = new THREE.MeshStandardMaterial({ color: 0x1f3a4d, roughness: 1, side: THREE.DoubleSide })
 const pile = new THREE.MeshStandardMaterial({ color: 0x8d8d8d, roughness: 1 })
+const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x111111 })
+
+function withEdges(mesh: THREE.Mesh): THREE.Mesh {
+  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMaterial))
+  return mesh
+}
 
 function vec(p: Vec3): THREE.Vector3 {
   return new THREE.Vector3(p.x, p.y, p.z)
@@ -82,6 +93,32 @@ function facadeMaterial(type: FacadeType, uLen: number, vLen: number): THREE.Mes
   return mat
 }
 
+function membraneMaterial(uLen: number, vLen: number): THREE.MeshStandardMaterial {
+  const tex = getMembraneTexture().clone()
+  tex.needsUpdate = true
+  tex.repeat.set(Math.max(1, uLen / 1000), Math.max(1, vLen / 1000))
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, side: THREE.DoubleSide })
+  mat.userData.disposable = true
+  return mat
+}
+
+function roofingMaterial(covering: RoofCovering, uLen: number, vLen: number): THREE.MeshStandardMaterial {
+  if (covering === 'ventilated') {
+    const tex = getMetalShingleTexture().clone()
+    tex.needsUpdate = true
+    tex.repeat.set(Math.max(1, uLen / 1500), Math.max(1, vLen / 1500))
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide })
+    mat.userData.disposable = true
+    return mat
+  }
+  const tex = getShingleTexture().clone()
+  tex.needsUpdate = true
+  tex.repeat.set(Math.max(1, uLen / 1000), Math.max(1, vLen / 1000))
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, side: THREE.DoubleSide })
+  mat.userData.disposable = true
+  return mat
+}
+
 function orientedBox(thickness: number, width: number, start: THREE.Vector3, end: THREE.Vector3, up: THREE.Vector3, material: THREE.Material): THREE.Mesh {
   const zAxis = new THREE.Vector3().subVectors(end, start)
   const length = zAxis.length()
@@ -113,7 +150,7 @@ function panelMesh(panel: Panel, material: THREE.Material): THREE.Mesh {
     geom.setAttribute('position', new THREE.Float32BufferAttribute([p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z], 3))
     geom.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1], 2))
     geom.computeVertexNormals()
-    return new THREE.Mesh(geom, material)
+    return withEdges(new THREE.Mesh(geom, material))
   }
 
   const center = origin.clone().add(normal.clone().multiplyScalar(panel.offset)).add(u.clone().multiplyScalar(0.5)).add(v.clone().multiplyScalar(0.5))
@@ -121,7 +158,7 @@ function panelMesh(panel: Panel, material: THREE.Material): THREE.Mesh {
   const m = new THREE.Matrix4().makeBasis(u.clone().normalize(), v.clone().normalize(), normal)
   m.setPosition(center)
   mesh.applyMatrix4(m)
-  return mesh
+  return withEdges(mesh)
 }
 
 export interface RenderResult {
@@ -141,19 +178,12 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
   ) as Record<LayerName, THREE.Group>
 
   for (const p of model.piles) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(p.size, p.top - p.bottom, p.size), pile)
+    const mesh = withEdges(new THREE.Mesh(new THREE.BoxGeometry(p.size, p.top - p.bottom, p.size), pile))
     mesh.position.set(p.x, (p.bottom + p.top) / 2, p.z)
     layers.piles.add(mesh)
   }
 
   for (const m of model.members) layers[memberLayer(m)].add(memberMesh(m))
-
-  const roofingMat = new THREE.MeshStandardMaterial({
-    color: config.roof.covering === 'shingles' ? 0x2b2f36 : 0x6b7785,
-    roughness: config.roof.covering === 'shingles' ? 1 : 0.5,
-    metalness: config.roof.covering === 'shingles' ? 0 : 0.6,
-    side: THREE.DoubleSide,
-  })
 
   for (const panel of model.panels) {
     switch (panel.kind) {
@@ -166,17 +196,20 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
       case 'osb-roof':
         layers.roofOsb.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
         break
+      case 'soffit':
+        layers.soffit.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
+        break
       case 'membrane-wall':
-        layers.wallMembrane.add(panelMesh(panel, membrane))
+        layers.wallMembrane.add(panelMesh(panel, membraneMaterial(len(panel.u), len(panel.v))))
         break
       case 'membrane-roof':
-        layers.roofMembrane.add(panelMesh(panel, membrane))
+        layers.roofMembrane.add(panelMesh(panel, membraneMaterial(len(panel.u), len(panel.v))))
         break
       case 'cladding':
         layers.cladding.add(panelMesh(panel, facadeMaterial(config.walls.facadeType, len(panel.u), len(panel.v))))
         break
       case 'roofing':
-        layers.roofing.add(panelMesh(panel, roofingMat))
+        layers.roofing.add(panelMesh(panel, roofingMaterial(config.roof.covering, len(panel.u), len(panel.v))))
         break
       default:
         break
@@ -200,7 +233,9 @@ function memberLayer(member: Member): LayerName {
     case 'rafter':
       return 'rafters'
     case 'batten':
-      return 'battens'
+      return Math.abs(member.start.y - member.end.y) < 1 ? 'roofBattens' : 'battens'
+    case 'fascia':
+      return 'fascia'
     default:
       return 'wallFraming'
   }
@@ -208,5 +243,5 @@ function memberLayer(member: Member): LayerName {
 
 function memberMesh(member: Member): THREE.Mesh {
   const material = member.role === 'batten' ? batten : timber
-  return orientedBox(member.thickness, member.width, vec(member.start), vec(member.end), vec(member.up), material)
+  return withEdges(orientedBox(member.thickness, member.width, vec(member.start), vec(member.end), vec(member.up), material))
 }

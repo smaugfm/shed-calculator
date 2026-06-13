@@ -41,6 +41,27 @@ export function NumberRow({
   )
 }
 
+export function CheckboxRow({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+  title,
+}: {
+  label: string
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+  title?: string
+}) {
+  return (
+    <label className="row" title={title} style={disabled ? { opacity: 0.5 } : undefined}>
+      <span>{label}</span>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+    </label>
+  )
+}
+
 export interface Option {
   value: string
   label: string

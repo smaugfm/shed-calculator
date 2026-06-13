@@ -154,12 +154,37 @@ describe('roof', () => {
     expect(maxX).toBeLessThanOrEqual(cfg.base.width + TOL)
   })
 
-  it('only adds roof battens when ventilated', () => {
-    const shingles = buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'shingles' } })
-    const vent = buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'ventilated' } })
-    const roofBattens = (m: ShedModel) => role(m, 'batten').filter((b) => Math.abs(b.start.x - b.end.x) > 1).length
-    expect(roofBattens(shingles)).toBe(0)
-    expect(roofBattens(vent)).toBeGreaterThan(0)
+  const roofBattens = (m: ShedModel) => role(m, 'batten').filter((b) => Math.abs(b.start.x - b.end.x) > 1)
+
+  it('adds roof battens only for ventilated with battens enabled', () => {
+    expect(roofBattens(buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'shingles' } })).length).toBe(0)
+    expect(roofBattens(buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'ventilated', battens: false } })).length).toBe(0)
+    expect(roofBattens(buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'ventilated', battens: true } })).length).toBeGreaterThan(0)
+  })
+
+  it('extends roof battens across the full roof width (to the barge boards)', () => {
+    const vent = buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'ventilated', battens: true } })
+    const sides = cfg.roof.overhangs.sides
+    const xs = roofBattens(vent).flatMap((b) => [b.start.x, b.end.x])
+    expect(Math.min(...xs)).toBeCloseTo(-sides, 5)
+    expect(Math.max(...xs)).toBeCloseTo(cfg.base.width + sides, 5)
+  })
+
+  it('wraps the roof perimeter with fascia/barge boards (2 eaves + 2 rakes)', () => {
+    expect(role(model, 'fascia').length).toBe(4)
+  })
+
+  it('closes the overhang underside with four soffit panels', () => {
+    expect(model.panels.filter((p) => p.kind === 'soffit').length).toBe(4)
+  })
+
+  it('applies independent front/rear/side overhangs', () => {
+    const m = buildModel({ ...cfg, roof: { ...cfg.roof, overhangs: { front: 300, rear: 100, sides: 50 } } })
+    const deck = m.panels.find((p) => p.kind === 'roofing')!
+    expect(deck.origin.z).toBeCloseTo(-300, 5)
+    expect(deck.origin.z + deck.v.z).toBeCloseTo(cfg.base.depth + 100, 5)
+    expect(deck.origin.x).toBeCloseTo(-50, 5)
+    expect(deck.origin.x + deck.u.x).toBeCloseTo(cfg.base.width + 50, 5)
   })
 
   it('stacks roofing outside membrane outside OSB', () => {

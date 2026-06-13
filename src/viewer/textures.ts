@@ -90,6 +90,116 @@ export function getCladdingTexture(): THREE.CanvasTexture {
   return claddingTexture
 }
 
+let membraneTexture: THREE.CanvasTexture | null = null
+
+export function getMembraneTexture(): THREE.CanvasTexture {
+  if (membraneTexture) return membraneTexture
+  membraneTexture = makeTexture((ctx, size) => {
+    ctx.translate(size, 0)
+    ctx.scale(-1, 1) // mirror so branding reads correctly on the outward face
+    ctx.fillStyle = '#c9ced2'
+    ctx.fillRect(0, 0, size, size)
+    ctx.globalAlpha = 0.07
+    for (let i = 0; i < 14000; i++) {
+      ctx.strokeStyle = Math.random() > 0.5 ? '#ffffff' : '#8d959b'
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const a = Math.random() * Math.PI
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x + Math.cos(a) * 7, y + Math.sin(a) * 7)
+      ctx.stroke()
+    }
+    ctx.globalAlpha = 0.18
+    ctx.fillStyle = '#7f878d'
+    ctx.font = 'bold 26px sans-serif'
+    for (let row = 0; row < 4; row++) {
+      ctx.fillText('SHED·WRAP  BREATHABLE', 12, 70 + row * 130)
+    }
+  })
+  return membraneTexture
+}
+
+let shingleTexture: THREE.CanvasTexture | null = null
+
+export function getShingleTexture(): THREE.CanvasTexture {
+  if (shingleTexture) return shingleTexture
+  shingleTexture = makeTexture((ctx, size) => {
+    ctx.fillStyle = '#33363b'
+    ctx.fillRect(0, 0, size, size)
+    const courses = 8
+    const ch = size / courses
+    const tab = size / 8
+    for (let r = 0; r < courses; r++) {
+      const y = r * ch
+      const offset = (r % 2) * (tab / 2)
+      const shade = 0.85 + Math.random() * 0.3
+      ctx.fillStyle = `rgb(${Math.round(60 * shade)}, ${Math.round(64 * shade)}, ${Math.round(70 * shade)})`
+      ctx.fillRect(0, y, size, ch - 3)
+      ctx.strokeStyle = 'rgba(15,16,18,0.9)'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.moveTo(0, y + ch - 1.5)
+      ctx.lineTo(size, y + ch - 1.5)
+      ctx.stroke()
+      for (let t = -1; t <= 8; t++) {
+        const x = t * tab + offset
+        ctx.beginPath()
+        ctx.moveTo(x, y + ch * 0.45)
+        ctx.lineTo(x, y + ch - 1.5)
+        ctx.stroke()
+      }
+    }
+    ctx.globalAlpha = 0.12
+    for (let i = 0; i < 12000; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#000000' : '#9aa0a6'
+      ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2)
+    }
+  })
+  return shingleTexture
+}
+
+let metalShingleTexture: THREE.CanvasTexture | null = null
+
+export function getMetalShingleTexture(): THREE.CanvasTexture {
+  if (metalShingleTexture) return metalShingleTexture
+  metalShingleTexture = makeTexture((ctx, size) => {
+    ctx.fillStyle = '#7e878e'
+    ctx.fillRect(0, 0, size, size)
+    const courses = 6
+    const ch = size / courses
+    const tiles = 5
+    const tw = size / tiles
+    for (let r = 0; r < courses; r++) {
+      const y = r * ch
+      const offset = (r % 2) * (tw / 2)
+      for (let t = -1; t <= tiles; t++) {
+        const x = t * tw + offset
+        const g = ctx.createLinearGradient(0, y, 0, y + ch)
+        g.addColorStop(0, '#b3bbc1')
+        g.addColorStop(0.5, '#8c949b')
+        g.addColorStop(1, '#6d757b')
+        ctx.fillStyle = g
+        ctx.fillRect(x + 1.5, y + 1.5, tw - 3, ch - 3)
+      }
+      ctx.strokeStyle = 'rgba(35,40,44,0.85)'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.moveTo(0, y + ch - 1)
+      ctx.lineTo(size, y + ch - 1)
+      ctx.stroke()
+      for (let t = -1; t <= tiles; t++) {
+        const x = t * tw + offset
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x, y + ch)
+        ctx.stroke()
+      }
+    }
+  })
+  return metalShingleTexture
+}
+
 let metalTexture: THREE.CanvasTexture | null = null
 
 export function getMetalTexture(): THREE.CanvasTexture {

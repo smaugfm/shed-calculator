@@ -26,6 +26,7 @@ export type PanelKind =
   | 'membrane-roof'
   | 'cladding'
   | 'roofing'
+  | 'soffit'
   | 'glazing'
 
 export type PanelShape = 'rect' | 'triangle'

@@ -15,6 +15,7 @@ export type StructuralRole =
   | 'plate'
   | 'header'
   | 'batten'
+  | 'fascia'
 
 export type RoleProfiles = Record<StructuralRole, string>
 
@@ -90,6 +91,7 @@ export type FacadeType = 'cladding' | 'metal'
 
 export interface WallConfig {
   studSpacing: Millimetres
+  battenSpacing: Millimetres
   osbThickness: Millimetres
   facadeType: FacadeType
   topPlateCount: 1 | 2
@@ -101,9 +103,11 @@ export type RoofCovering = 'shingles' | 'ventilated'
 export interface RoofConfig {
   type: 'mono-pitch'
   covering: RoofCovering
+  battens: boolean
+  battenSpacing: Millimetres
   rafterSpacing: Millimetres
   osbThickness: Millimetres
-  overhang: Millimetres
+  overhangs: { front: Millimetres; rear: Millimetres; sides: Millimetres }
 }
 
 export type WallSide = 'front' | 'back' | 'left' | 'right'

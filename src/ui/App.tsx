@@ -28,7 +28,7 @@ export function App() {
       />
       <div className="main">
         <aside className="sidebar left">
-          <LayersPanel layers={layers} setLayers={setLayers} />
+          <LayersPanel layers={layers} setLayers={setLayers} hidden={config.roof.covering === 'ventilated' && config.roof.battens ? [] : ['roofBattens']} />
           <ConfigPanel config={config} setConfig={setConfig} />
         </aside>
         <Viewport ref={viewportRef} model={model} config={config} rulerActive={rulerActive} layers={layers} />

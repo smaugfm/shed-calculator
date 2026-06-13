@@ -56,6 +56,7 @@ function sheetLines(panels: Panel[], config: ShedConfig): BomLine[] {
     { kind: 'osb-floor', label: 'OSB floor deck' },
     { kind: 'osb-wall', label: 'OSB wall sheathing' },
     { kind: 'osb-roof', label: 'OSB roof sheathing' },
+    { kind: 'soffit', label: 'Soffit boards' },
   ]
   const lines: BomLine[] = []
   for (const { kind, label } of kinds) {
