@@ -37,16 +37,7 @@ export interface Member {
   length: number
 }
 
-export type PanelKind =
-  | 'osb-floor'
-  | 'osb-wall'
-  | 'osb-roof'
-  | 'membrane-wall'
-  | 'membrane-roof'
-  | 'cladding'
-  | 'roofing'
-  | 'soffit'
-  | 'glazing'
+export type PanelKind = 'osb-floor' | 'osb-wall' | 'osb-roof' | 'membrane-wall' | 'membrane-roof' | 'cladding' | 'roofing' | 'soffit' | 'glazing'
 
 export type PanelShape = 'rect' | 'triangle'
 

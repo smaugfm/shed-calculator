@@ -7,15 +7,7 @@ export interface TimberProfile {
   width: Millimetres
 }
 
-export type StructuralRole =
-  | 'gradeBeam'
-  | 'joist'
-  | 'rafter'
-  | 'stud'
-  | 'plate'
-  | 'header'
-  | 'batten'
-  | 'fascia'
+export type StructuralRole = 'gradeBeam' | 'joist' | 'rafter' | 'stud' | 'plate' | 'header' | 'batten' | 'fascia'
 
 export type RoleProfiles = Record<StructuralRole, string>
 

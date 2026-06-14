@@ -6,14 +6,14 @@ or architectural changes, and append an "Implementation Results" section as you 
 These initial logs are **retroactive** — they document the system as built over the iterative
 sessions, so each carries its Implementation Results inline.
 
-| #    | Title | Scope |
-|------|-------|-------|
-| 0001 | [Architecture & Stack](./0001-architecture-and-stack.md) | Pure `config → model → BOM` core; Vite + React + three.js |
-| 0002 | [Parametric Structural Model](./0002-parametric-structural-model.md) | Member/Panel/Pile types, coordinate system, `buildModel` |
-| 0003 | [Corner & Edge Alignment](./0003-corner-and-edge-alignment.md) | Inset framing; lap/butt skin convention |
-| 0004 | [Roof System](./0004-roof-system.md) | Mono-pitch, overhangs, fascia/barge, soffit, battens |
-| 0005 | [Rendering, Materials & Layers](./0005-rendering-materials-and-layers.md) | three.js viewer, textures, edges, layers, ruler, export |
-| 0006 | [Bill of Materials](./0006-bill-of-materials.md) | Timber/sheets/membrane/fasteners derivation |
-| 0007 | [Model Test Suite](./0007-model-test-suite.md) | Vitest invariants (27 tests) |
+| #    | Title                                                                     | Scope                                                     |
+| ---- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 0001 | [Architecture & Stack](./0001-architecture-and-stack.md)                  | Pure `config → model → BOM` core; Vite + React + three.js |
+| 0002 | [Parametric Structural Model](./0002-parametric-structural-model.md)      | Member/Panel/Pile types, coordinate system, `buildModel`  |
+| 0003 | [Corner & Edge Alignment](./0003-corner-and-edge-alignment.md)            | Inset framing; lap/butt skin convention                   |
+| 0004 | [Roof System](./0004-roof-system.md)                                      | Mono-pitch, overhangs, fascia/barge, soffit, battens      |
+| 0005 | [Rendering, Materials & Layers](./0005-rendering-materials-and-layers.md) | three.js viewer, textures, edges, layers, ruler, export   |
+| 0006 | [Bill of Materials](./0006-bill-of-materials.md)                          | Timber/sheets/membrane/fasteners derivation               |
+| 0007 | [Model Test Suite](./0007-model-test-suite.md)                            | Vitest invariants (27 tests)                              |
 
 Next log number: **0008**.

@@ -17,10 +17,7 @@ interface ViewportProps {
   layers: Record<LayerName, boolean>
 }
 
-export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewport(
-  { model, config, rulerActive, layers },
-  ref,
-) {
+export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewport({ model, config, rulerActive, layers }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<Scene | null>(null)
   const rulerRef = useRef<Ruler | null>(null)

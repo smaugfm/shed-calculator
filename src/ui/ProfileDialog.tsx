@@ -58,7 +58,12 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
                 <input type="number" min={1} value={p.thickness} onChange={(e) => update(p.id, { thickness: Number(e.target.value) })} />
                 <span>×</span>
                 <input type="number" min={1} value={p.width} onChange={(e) => update(p.id, { width: Number(e.target.value) })} />
-                <button className="remove-btn" disabled={used.length > 0} title={used.length > 0 ? `Used by ${used.map((r) => ROLE_LABELS[r]).join(', ')}` : 'Remove profile'} onClick={() => remove(p)}>
+                <button
+                  className="remove-btn"
+                  disabled={used.length > 0}
+                  title={used.length > 0 ? `Used by ${used.map((r) => ROLE_LABELS[r]).join(', ')}` : 'Remove profile'}
+                  onClick={() => remove(p)}
+                >
                   Remove
                 </button>
               </div>

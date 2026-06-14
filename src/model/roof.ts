@@ -105,19 +105,20 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
     const o = under(x0, z0)
     return makePanel('soffit', o, sub(under(x1, z0), o), sub(under(x0, z1), o), down, 18, 9)
   }
-  panels.push(
-    soffit(0, base.width, zStart, 0),
-    soffit(0, base.width, base.depth, zEnd),
-    soffit(xL, 0, zStart, zEnd),
-    soffit(base.width, xR, zStart, zEnd),
-  )
+  panels.push(soffit(0, base.width, zStart, 0), soffit(0, base.width, base.depth, zEnd), soffit(xL, 0, zStart, zEnd), soffit(base.width, xR, zStart, zEnd))
 
   // Corner convention: rake/barge boards run the full length along the sides and the square-cut
   // eave fascias butt between them. Eaves are square-cut (up = roof normal) so the sloped
   // rafters/battens/roofing butt into them rather than protruding.
   const ft2 = fascia.thickness / 2
   const eaveFascia = (z: number) =>
-    makeMember('fascia', fascia, add(v(xL + ft2, bearY(z), z), scale(normal, fasciaCenterN)), add(v(xR - ft2, bearY(z), z), scale(normal, fasciaCenterN)), normal)
+    makeMember(
+      'fascia',
+      fascia,
+      add(v(xL + ft2, bearY(z), z), scale(normal, fasciaCenterN)),
+      add(v(xR - ft2, bearY(z), z), scale(normal, fasciaCenterN)),
+      normal,
+    )
   const trimY = (z: number) => bearY(z) + (topN - reveal) * normal.y - fascia.width / 2
   members.push(
     eaveFascia(zStart),

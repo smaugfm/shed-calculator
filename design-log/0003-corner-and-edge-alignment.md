@@ -1,24 +1,29 @@
 # Design Log #0003 — Corner & Edge Alignment
 
 ## Background
+
 Framing members and skin layers meet at building corners and at the floor/footprint edges.
 Naive placement made pieces poke out or leave gaps.
 
 ## Problem
+
 Two recurring failure modes:
+
 1. A member **centered on an edge line** has half its thickness poking past the footprint
    (corner studs, perimeter grade beams, rim joists, outermost rafters).
 2. Perpendicular **skin layers** (OSB/membrane/cladding) on adjacent walls leave a notch at
    the corner because each is offset outward and the neighbour doesn't cover the gap.
 
 ## Questions and Answers
+
 - **One generic corner abstraction?** No (decided in conversation). Geometry differs too much
   (vertical walls vs sloped roof trim vs square-cut fascia). Keep a **consistent convention**,
   applied per context. Revisit if the shed gains L-plans/multiple roofs.
 
 ## Design
-**Convention:** the *long pair* (front/back walls) runs through / wraps the corner; the
-*short pair* (side walls) butts between them.
+
+**Convention:** the _long pair_ (front/back walls) runs through / wraps the corner; the
+_short pair_ (side walls) butts between them.
 
 - **Inset framing to the footprint:** stud/plate centerlines sit `stud.width/2` inside the
   footprint (outer face on the line); end studs additionally clamped by `stud.thickness/2`.
@@ -33,17 +38,21 @@ Two recurring failure modes:
   forms the cavity depth (root-cause of a "battens poke through" bug).
 
 ## Examples
+
 ✅ `lap = gable ? offset - thickness/2 : offset + thickness/2` — front laps, sides butt.
 ❌ Panel offset via `sign(cross(u,v))` — pointed inward on some faces; replaced by explicit `normal`.
 
 ## Trade-offs
+
 - ✅ One convention reused for walls and roof trim (#0004).
 - ❌ Per-context code (no shared helper) — accepted for a single rectangular shed.
 
 ## Verification
+
 "No stud/rafter pokes outside the footprint"; "front OSB laps, side OSB butts"; perimeter beams
 reach corners — all asserted in #0007.
 
 ## Implementation Results
+
 Implemented across `model/floor.ts`, `model/walls.ts`, `model/roof.ts`, `model/sheets.ts`.
 Gable triangles share the same lap as the rectangular wall body.

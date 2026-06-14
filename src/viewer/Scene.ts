@@ -53,7 +53,6 @@ export class Scene {
     this.scene.add(sun)
   }
 
-
   setModel(result: RenderResult): void {
     if (this.modelGroup) {
       this.scene.remove(this.modelGroup)

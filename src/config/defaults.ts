@@ -24,7 +24,15 @@ export function defaultConfig(): ShedConfig {
     },
     foundation: deriveFoundation(4, 3),
     floor: { joistSpacing: 400, deckThickness: 18 },
-    walls: { studSpacing: 600, battenSpacing: 600, osbThickness: 11, facadeType: 'cladding', cladding: { width: 150, length: 3600 }, topPlateCount: 2, bottomPlateCount: 1 },
+    walls: {
+      studSpacing: 600,
+      battenSpacing: 600,
+      osbThickness: 11,
+      facadeType: 'cladding',
+      cladding: { width: 150, length: 3600 },
+      topPlateCount: 2,
+      bottomPlateCount: 1,
+    },
     roof: {
       type: 'mono-pitch',
       covering: 'shingles',

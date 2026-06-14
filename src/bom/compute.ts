@@ -85,7 +85,10 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
 
   const clad = pieces.filter((p) => p.materialId === 'cladding')
   if (clad.length > 0) {
-    const boards = packLengths(clad.map((p) => pieceBBox(p).h), config.walls.cladding.length)
+    const boards = packLengths(
+      clad.map((p) => pieceBBox(p).h),
+      config.walls.cladding.length,
+    )
     const bought = (boards * config.walls.cladding.width * config.walls.cladding.length) / 1e6
     const used = clad.reduce((s, p) => s + p.usedArea, 0)
     lines.push({
@@ -123,7 +126,8 @@ function areaLines(panels: Panel[], config: ShedConfig): BomLine[] {
     const label = config.roof.covering === 'shingles' ? 'EPDM membrane (roof)' : 'Breather membrane (roof)'
     lines.push({ category: 'Membrane & covering', label, spec: `${round(roofMembrane)} m² (incl. overhang)`, qty: round(roofMembrane), unit: 'm²' })
   }
-  if (wallMembrane > 0) lines.push({ category: 'Membrane & covering', label: 'Breather membrane (walls)', spec: `${round(wallMembrane)} m²`, qty: round(wallMembrane), unit: 'm²' })
+  if (wallMembrane > 0)
+    lines.push({ category: 'Membrane & covering', label: 'Breather membrane (walls)', spec: `${round(wallMembrane)} m²`, qty: round(wallMembrane), unit: 'm²' })
   return lines
 }
 
@@ -163,6 +167,7 @@ function fastenerLines(model: ShedModel, config: ShedConfig): BomLine[] {
 
   const lines: BomLine[] = []
   for (const [specId, qty] of counts) lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${qty} pcs`, qty, unit: 'pcs' })
-  for (const [specId, litres] of adhesive) lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${round(litres)} L`, qty: round(litres), unit: 'L' })
+  for (const [specId, litres] of adhesive)
+    lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${round(litres)} L`, qty: round(litres), unit: 'L' })
   return lines.sort((a, b) => a.label.localeCompare(b.label))
 }

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import {Millimetres} from "../config/types.ts";
+import { Millimetres } from '../config/types.ts'
 
 export function Section({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
   return (
@@ -101,17 +101,7 @@ export interface Option {
   label: string
 }
 
-export function SelectRow({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: Option[]
-  onChange: (v: string) => void
-}) {
+export function SelectRow({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (v: string) => void }) {
   return (
     <label className="row">
       <span>{label}</span>

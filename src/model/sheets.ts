@@ -35,9 +35,7 @@ export function decomposeWall(uStart: number, uEnd: number, y0: number, y1: numb
   for (let i = 0; i < ys.length - 1; i++) {
     const bandV0 = ys[i]
     const bandV1 = ys[i + 1]
-    const bandHoles: Interval[] = holes
-      .filter((h) => h.v0 <= bandV0 + 0.5 && h.v1 >= bandV1 - 0.5)
-      .map((h) => [h.u0, h.u1] as Interval)
+    const bandHoles: Interval[] = holes.filter((h) => h.v0 <= bandV0 + 0.5 && h.v1 >= bandV1 - 0.5).map((h) => [h.u0, h.u1] as Interval)
     for (const [u0, u1] of subtractIntervals([uStart, uEnd], bandHoles)) {
       rects.push({ u0, u1, v0: bandV0, v1: bandV1 })
     }

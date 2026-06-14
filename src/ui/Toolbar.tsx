@@ -40,7 +40,11 @@ export function Toolbar({ config, setConfig, rulerActive, onToggleRuler, onExpor
         ⬇ Export .glb
       </button>
 
-      <button onClick={() => { if (confirm('Reset all configuration to defaults?')) onReset() }}>
+      <button
+        onClick={() => {
+          if (confirm('Reset all configuration to defaults?')) onReset()
+        }}
+      >
         ↺ Reset
       </button>
     </div>

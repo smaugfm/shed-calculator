@@ -1,5 +1,5 @@
 ---
-description: "This rule provides standards for design log files"
+description: 'This rule provides standards for design log files'
 alwaysApply: true
 ---
 
@@ -8,11 +8,13 @@ alwaysApply: true
 The project follows a rigorous design log methodology for all significant features and architectural changes.
 
 ### Before Making Changes
+
 1. **Check design logs** in `./design-log/` for existing designs and implementation notes
 2. **For new features**: Create design log first, get approval, then implement
 3. **Read related design logs** to understand context and constraints
 
 ### When Creating Design Logs
+
 1. **Structure**: Background → Problem → Questions and Answers → Design → Implementation Plan → Examples → Trade-offs
 2. **Be specific**: Include file paths, type signatures, validation rules
 3. **Show examples**: Use ✅/❌ for good/bad patterns, include realistic code
@@ -24,6 +26,7 @@ The project follows a rigorous design log methodology for all significant featur
 9. **Define verification criteria**: how do we know the implementation solves the original problem
 
 ### When Implementing
+
 1. **Follow the implementation plan** phases from the design log
 2. **Write tests first** or update existing tests to match new behavior
 3. **Do not Update design log** initial section once implementation started
@@ -33,12 +36,14 @@ The project follows a rigorous design log methodology for all significant featur
 7. **After Implementation** add a summary of deviations from original design
 
 ### When Answering Questions
+
 1. **Reference design logs** by number when relevant (e.g., "See Design Log #50")
 2. **Use codebase terminology**: ViewState, Contract, JayContract, phase annotations
 3. **Show type signatures**: This is a TypeScript project with heavy type usage
 4. **Consider backward compatibility**: Default to non-breaking changes
 
 ### On User Feedback
+
 1. **Assess feedback type**: Clarification → answer directly; Bug → fix or design log; Feature → evaluate design log need; Implementation issue → append to existing log
 2. **Append to existing design log** if: relates to in-progress work, missed constraint, implementation deviation, or refines existing design
 3. **Create new design log** if: new feature, multi-component change, architectural challenge, or affects multiple design logs

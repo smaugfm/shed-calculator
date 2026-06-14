@@ -44,43 +44,159 @@ export function ConfigPanel({ config, setConfig }: Props) {
       <Section title="Dimensions" open>
         <NumberRow label="Base width" value={config.base.width} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, width: v } }))} />
         <NumberRow label="Base depth" value={config.base.depth} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, depth: v } }))} />
-        <NumberRow label="Eave height (low)" value={config.heights.min} validate={(v) => (v >= config.heights.max ? 'Must be below the high eave' : undefined)} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, min: v } }))} />
-        <NumberRow label="Eave height (high)" value={config.heights.max} validate={(v) => (v <= config.heights.min ? 'Must be above the low eave' : undefined)} onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, max: v } }))} />
+        <NumberRow
+          label="Eave height (low)"
+          value={config.heights.min}
+          validate={(v) => (v >= config.heights.max ? 'Must be below the high eave' : undefined)}
+          onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, min: v } }))}
+        />
+        <NumberRow
+          label="Eave height (high)"
+          value={config.heights.max}
+          validate={(v) => (v <= config.heights.min ? 'Must be above the low eave' : undefined)}
+          onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, max: v } }))}
+        />
       </Section>
 
       <Section title="Foundation (piles)">
-        <NumberRow label="Piles across width" value={config.foundation.countX} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countX: v } }))} />
-        <NumberRow label="Piles across depth" value={config.foundation.countY} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countY: v } }))} />
+        <NumberRow
+          label="Piles across width"
+          value={config.foundation.countX}
+          step={1}
+          min={1}
+          suffix="pcs"
+          onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countX: v } }))}
+        />
+        <NumberRow
+          label="Piles across depth"
+          value={config.foundation.countY}
+          step={1}
+          min={1}
+          suffix="pcs"
+          onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countY: v } }))}
+        />
       </Section>
 
       <Section title="Floor">
-        <NumberRow label="Joist spacing" value={config.floor.joistSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, floor: { ...c.floor, joistSpacing: v } }))} />
-        <NumberRow label="OSB deck thickness" value={config.floor.deckThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, floor: { ...c.floor, deckThickness: v } }))} />
+        <NumberRow
+          label="Joist spacing"
+          value={config.floor.joistSpacing}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, floor: { ...c.floor, joistSpacing: v } }))}
+        />
+        <NumberRow
+          label="OSB deck thickness"
+          value={config.floor.deckThickness}
+          step={1}
+          onChange={(v) => setConfig((c) => ({ ...c, floor: { ...c.floor, deckThickness: v } }))}
+        />
       </Section>
 
       <Section title="Walls">
-        <NumberRow label="Stud spacing" value={config.walls.studSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, studSpacing: v } }))} />
-        <NumberRow label="Batten spacing" value={config.walls.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, battenSpacing: v } }))} />
-        <NumberRow label="OSB thickness" value={config.walls.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))} />
-        <SelectRow label="Facade" value={config.walls.facadeType} options={FACADE_OPTIONS} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, facadeType: v as FacadeType } }))} />
-        <NumberRow label="Cladding board width" value={config.walls.cladding.width} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, width: v } } }))} />
-        <NumberRow label="Cladding board length" value={config.walls.cladding.length} onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, length: v } } }))} />
-        <NumberRow label="OSB sheet width" value={config.stock.sheetWidth} onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))} />
-        <NumberRow label="OSB sheet height" value={config.stock.sheetHeight} onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))} />
-        <SelectRow label="Bottom plate" value={String(config.walls.bottomPlateCount)} options={PLATE_COUNT_OPTIONS} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, bottomPlateCount: Number(v) as 1 | 2 } }))} />
-        <SelectRow label="Top plate" value={String(config.walls.topPlateCount)} options={PLATE_COUNT_OPTIONS} onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, topPlateCount: Number(v) as 1 | 2 } }))} />
+        <NumberRow
+          label="Stud spacing"
+          value={config.walls.studSpacing}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, studSpacing: v } }))}
+        />
+        <NumberRow
+          label="Batten spacing"
+          value={config.walls.battenSpacing}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, battenSpacing: v } }))}
+        />
+        <NumberRow
+          label="OSB thickness"
+          value={config.walls.osbThickness}
+          step={1}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))}
+        />
+        <SelectRow
+          label="Facade"
+          value={config.walls.facadeType}
+          options={FACADE_OPTIONS}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, facadeType: v as FacadeType } }))}
+        />
+        <NumberRow
+          label="Cladding board width"
+          value={config.walls.cladding.width}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, width: v } } }))}
+        />
+        <NumberRow
+          label="Cladding board length"
+          value={config.walls.cladding.length}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, length: v } } }))}
+        />
+        <NumberRow
+          label="OSB sheet width"
+          value={config.stock.sheetWidth}
+          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))}
+        />
+        <NumberRow
+          label="OSB sheet height"
+          value={config.stock.sheetHeight}
+          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))}
+        />
+        <SelectRow
+          label="Bottom plate"
+          value={String(config.walls.bottomPlateCount)}
+          options={PLATE_COUNT_OPTIONS}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, bottomPlateCount: Number(v) as 1 | 2 } }))}
+        />
+        <SelectRow
+          label="Top plate"
+          value={String(config.walls.topPlateCount)}
+          options={PLATE_COUNT_OPTIONS}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, topPlateCount: Number(v) as 1 | 2 } }))}
+        />
       </Section>
 
       <Section title="Roof (mono-pitch)">
-        <SelectRow label="Covering" value={config.roof.covering} options={[{ value: 'shingles', label: 'Asphalt shingles (EPDM)' }, { value: 'ventilated', label: 'Ventilated metal' }]} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, covering: v as RoofCovering } }))} />
-        <CheckboxRow label="Battens" checked={config.roof.covering === 'ventilated' && config.roof.battens} disabled={config.roof.covering !== 'ventilated'} title={config.roof.covering !== 'ventilated' ? 'Battens apply to ventilated roofing only' : 'Counter-battens forming the roof vent cavity'} onChange={(b) => setConfig((c) => ({ ...c, roof: { ...c.roof, battens: b } }))} />
-        <NumberRow label="Batten spacing" value={config.roof.battenSpacing} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, battenSpacing: v } }))} />
-        <NumberRow label="Rafter spacing" value={config.roof.rafterSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, rafterSpacing: v } }))} />
-        <NumberRow label="OSB thickness" value={config.roof.osbThickness} step={1} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))} />
+        <SelectRow
+          label="Covering"
+          value={config.roof.covering}
+          options={[
+            { value: 'shingles', label: 'Asphalt shingles (EPDM)' },
+            { value: 'ventilated', label: 'Ventilated metal' },
+          ]}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, covering: v as RoofCovering } }))}
+        />
+        <CheckboxRow
+          label="Battens"
+          checked={config.roof.covering === 'ventilated' && config.roof.battens}
+          disabled={config.roof.covering !== 'ventilated'}
+          title={config.roof.covering !== 'ventilated' ? 'Battens apply to ventilated roofing only' : 'Counter-battens forming the roof vent cavity'}
+          onChange={(b) => setConfig((c) => ({ ...c, roof: { ...c.roof, battens: b } }))}
+        />
+        <NumberRow
+          label="Batten spacing"
+          value={config.roof.battenSpacing}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, battenSpacing: v } }))}
+        />
+        <NumberRow
+          label="Rafter spacing"
+          value={config.roof.rafterSpacing}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, rafterSpacing: v } }))}
+        />
+        <NumberRow
+          label="OSB thickness"
+          value={config.roof.osbThickness}
+          step={1}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))}
+        />
         <ShingleRows config={config} setConfig={setConfig} />
-        <NumberRow label="Overhang front" value={config.roof.overhangs.front} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, front: v } } }))} />
-        <NumberRow label="Overhang rear" value={config.roof.overhangs.rear} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, rear: v } } }))} />
-        <NumberRow label="Overhang sides" value={config.roof.overhangs.sides} onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, sides: v } } }))} />
+        <NumberRow
+          label="Overhang front"
+          value={config.roof.overhangs.front}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, front: v } } }))}
+        />
+        <NumberRow
+          label="Overhang rear"
+          value={config.roof.overhangs.rear}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, rear: v } } }))}
+        />
+        <NumberRow
+          label="Overhang sides"
+          value={config.roof.overhangs.sides}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, sides: v } } }))}
+        />
       </Section>
 
       <Section title="Timber profiles (per role)">
@@ -107,7 +223,10 @@ export function ConfigPanel({ config, setConfig }: Props) {
           onClick={() =>
             setConfig((c) => ({
               ...c,
-              openings: [...c.openings, { id: `op-${Date.now()}`, wall: 'front', type: 'window', width: 800, height: 700, sillHeight: 1000, offsetAlongWall: 300 }],
+              openings: [
+                ...c.openings,
+                { id: `op-${Date.now()}`, wall: 'front', type: 'window', width: 800, height: 700, sillHeight: 1000, offsetAlongWall: 300 },
+              ],
             }))
           }
         >
@@ -116,15 +235,60 @@ export function ConfigPanel({ config, setConfig }: Props) {
       </Section>
 
       <Section title="Fasteners">
-        <SelectRow label="Sheathing fixing" value={config.fasteners.sheathing.specId} options={fastenerOptions} onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, specId: v } } }))} />
-        <NumberRow label="Sheathing perimeter spacing" value={config.fasteners.sheathing.perimeterSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, perimeterSpacing: v } } }))} />
-        <NumberRow label="Sheathing field spacing" value={config.fasteners.sheathing.fieldSpacing} onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, fieldSpacing: v } } }))} />
-        <SelectRow label="Cladding fixing" value={config.fasteners.cladding.specId} options={fastenerOptions} onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, cladding: { ...c.fasteners.cladding, specId: v } } }))} />
-        <NumberRow label="Cladding spacing" value={config.fasteners.cladding.spacing} onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, cladding: { ...c.fasteners.cladding, spacing: v } } }))} />
-        <SelectRow label="Framing fixing" value={config.fasteners.framing.specId} options={fastenerOptions} onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, framing: { ...c.fasteners.framing, specId: v } } }))} />
-        <NumberRow label="Framing per joint" value={config.fasteners.framing.perJoint} step={1} min={1} suffix="pcs" onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, framing: { ...c.fasteners.framing, perJoint: v } } }))} />
-        <SelectRow label="Roof covering fixing" value={config.fasteners.roofCovering.specId} options={fastenerOptions} onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, specId: v } } }))} />
-        <NumberRow label="Roof covering rate / m²" value={config.fasteners.roofCovering.ratePerSqm} step={1} suffix="/m²" onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, ratePerSqm: v } } }))} />
+        <SelectRow
+          label="Sheathing fixing"
+          value={config.fasteners.sheathing.specId}
+          options={fastenerOptions}
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, specId: v } } }))}
+        />
+        <NumberRow
+          label="Sheathing perimeter spacing"
+          value={config.fasteners.sheathing.perimeterSpacing}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, perimeterSpacing: v } } }))}
+        />
+        <NumberRow
+          label="Sheathing field spacing"
+          value={config.fasteners.sheathing.fieldSpacing}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, fieldSpacing: v } } }))}
+        />
+        <SelectRow
+          label="Cladding fixing"
+          value={config.fasteners.cladding.specId}
+          options={fastenerOptions}
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, cladding: { ...c.fasteners.cladding, specId: v } } }))}
+        />
+        <NumberRow
+          label="Cladding spacing"
+          value={config.fasteners.cladding.spacing}
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, cladding: { ...c.fasteners.cladding, spacing: v } } }))}
+        />
+        <SelectRow
+          label="Framing fixing"
+          value={config.fasteners.framing.specId}
+          options={fastenerOptions}
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, framing: { ...c.fasteners.framing, specId: v } } }))}
+        />
+        <NumberRow
+          label="Framing per joint"
+          value={config.fasteners.framing.perJoint}
+          step={1}
+          min={1}
+          suffix="pcs"
+          onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, framing: { ...c.fasteners.framing, perJoint: v } } }))}
+        />
+        <SelectRow
+          label="Roof covering fixing"
+          value={config.fasteners.roofCovering.specId}
+          options={fastenerOptions}
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, specId: v } } }))}
+        />
+        <NumberRow
+          label="Roof covering rate / m²"
+          value={config.fasteners.roofCovering.ratePerSqm}
+          step={1}
+          suffix="/m²"
+          onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, ratePerSqm: v } } }))}
+        />
       </Section>
     </div>
   )

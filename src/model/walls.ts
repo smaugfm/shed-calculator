@@ -40,7 +40,13 @@ function sideSpec(side: WallSide, config: ShedConfig, floorTopY: number): SideSp
     case 'left':
       return { length: base.depth, map: (u, y) => ({ x: 0, y, z: u }), normal: { x: -1, y: 0, z: 0 }, rectTopY: minTop, gableTopYAt: (u) => maxTop - slope * u }
     case 'right':
-      return { length: base.depth, map: (u, y) => ({ x: base.width, y, z: u }), normal: { x: 1, y: 0, z: 0 }, rectTopY: minTop, gableTopYAt: (u) => maxTop - slope * u }
+      return {
+        length: base.depth,
+        map: (u, y) => ({ x: base.width, y, z: u }),
+        normal: { x: 1, y: 0, z: 0 },
+        rectTopY: minTop,
+        gableTopYAt: (u) => maxTop - slope * u,
+      }
   }
 }
 
@@ -142,7 +148,9 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   }
   if (gableTopYAt) {
     const o = map(-mLap, rectTopY)
-    panels.push(makePanel('membrane-wall', o, sub(map(L, rectTopY), o), sub(map(-mLap, gableTopYAt(-mLap)), o), normal, MEMBRANE_THICKNESS, membraneOffset, 'triangle'))
+    panels.push(
+      makePanel('membrane-wall', o, sub(map(L, rectTopY), o), sub(map(-mLap, gableTopYAt(-mLap)), o), normal, MEMBRANE_THICKNESS, membraneOffset, 'triangle'),
+    )
   }
 
   // OSB and cladding are discrete pieces, cut to the wall outline (trapezoid for gables) and openings.

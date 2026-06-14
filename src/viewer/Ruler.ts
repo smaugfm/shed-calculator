@@ -94,10 +94,7 @@ export class Ruler {
   }
 
   private addMarker(p: THREE.Vector3): void {
-    const marker = new THREE.Mesh(
-      new THREE.SphereGeometry(40, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xff3b30 }),
-    )
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(40, 12, 12), new THREE.MeshBasicMaterial({ color: 0xff3b30 }))
     marker.position.copy(p)
     this.overlay.add(marker)
   }

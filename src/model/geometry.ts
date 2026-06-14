@@ -26,14 +26,6 @@ export function normalize(a: Vec3): Vec3 {
   return l === 0 ? v(0, 0, 0) : scale(a, 1 / l)
 }
 
-export function cross(a: Vec3, b: Vec3): Vec3 {
-  return {
-    x: a.y * b.z - a.z * b.y,
-    y: a.z * b.x - a.x * b.z,
-    z: a.x * b.y - a.y * b.x,
-  }
-}
-
 let counter = 0
 export function uid(prefix: string): string {
   counter += 1
@@ -44,13 +36,7 @@ export function resetIds(): void {
   counter = 0
 }
 
-export function makeMember(
-  role: StructuralRole,
-  profile: TimberProfile,
-  start: Vec3,
-  end: Vec3,
-  up: Vec3,
-): Member {
+export function makeMember(role: StructuralRole, profile: TimberProfile, start: Vec3, end: Vec3, up: Vec3): Member {
   return {
     id: uid(role),
     role,

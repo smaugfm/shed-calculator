@@ -26,12 +26,14 @@ export function LayersPanel({ layers, setLayers, hidden = [] }: Props) {
       {GROUPS.map((group) => (
         <div key={group} className="layers-group">
           <div className="layers-group-title">{group}</div>
-          {visibleLayers.filter((l) => l.group === group).map((l) => (
-            <label key={l.name} className="layer-row">
-              <input type="checkbox" checked={layers[l.name]} onChange={() => toggle(l.name)} />
-              {l.label}
-            </label>
-          ))}
+          {visibleLayers
+            .filter((l) => l.group === group)
+            .map((l) => (
+              <label key={l.name} className="layer-row">
+                <input type="checkbox" checked={layers[l.name]} onChange={() => toggle(l.name)} />
+                {l.label}
+              </label>
+            ))}
         </div>
       ))}
     </Section>
