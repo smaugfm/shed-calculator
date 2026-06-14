@@ -134,6 +134,21 @@ export function ConfigPanel({ config, setConfig }: Props) {
           value={config.stock.sheetHeight}
           onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))}
         />
+        <NumberRow
+          label="Membrane roll width"
+          value={config.walls.membrane.rollWidth}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, rollWidth: v } } }))}
+        />
+        <NumberRow
+          label="Membrane roll length"
+          value={config.walls.membrane.rollLength}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, rollLength: v } } }))}
+        />
+        <NumberRow
+          label="Membrane overlap"
+          value={config.walls.membrane.overlap}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, overlap: v } } }))}
+        />
         <SelectRow
           label="Bottom plate"
           value={String(config.walls.bottomPlateCount)}
@@ -182,6 +197,21 @@ export function ConfigPanel({ config, setConfig }: Props) {
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))}
         />
         <ShingleRows config={config} setConfig={setConfig} />
+        <NumberRow
+          label="Membrane roll width"
+          value={config.roof.membrane.rollWidth}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, rollWidth: v } } }))}
+        />
+        <NumberRow
+          label="Membrane roll length"
+          value={config.roof.membrane.rollLength}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, rollLength: v } } }))}
+        />
+        <NumberRow
+          label="Membrane overlap"
+          value={config.roof.membrane.overlap}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, overlap: v } } }))}
+        />
         <NumberRow
           label="Overhang front"
           value={config.roof.overhangs.front}

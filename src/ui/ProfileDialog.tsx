@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ShedConfig, StructuralRole, TimberProfile } from '../config/types'
+import { DEFAULT_PROFILE_LENGTH } from '../config/profiles'
 import { ROLE_LABELS } from './labels'
 
 interface Props {
@@ -29,7 +30,7 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
   const add = () =>
     setConfig((c) => ({
       ...c,
-      profiles: [...c.profiles, { id: `custom-${Date.now()}`, label: 'New profile', thickness: 45, width: 95 }],
+      profiles: [...c.profiles, { id: `custom-${Date.now()}`, label: 'New profile', thickness: 45, width: 95, length: DEFAULT_PROFILE_LENGTH }],
     }))
 
   return (
@@ -47,6 +48,7 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
           <span>Thickness</span>
           <span></span>
           <span>Width</span>
+          <span>Length</span>
           <span></span>
         </div>
         <div className="profile-list">
@@ -58,6 +60,7 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
                 <input type="number" min={1} value={p.thickness} onChange={(e) => update(p.id, { thickness: Number(e.target.value) })} />
                 <span>×</span>
                 <input type="number" min={1} value={p.width} onChange={(e) => update(p.id, { width: Number(e.target.value) })} />
+                <input type="number" min={1} value={p.length} onChange={(e) => update(p.id, { length: Number(e.target.value) })} />
                 <button
                   className="remove-btn"
                   disabled={used.length > 0}

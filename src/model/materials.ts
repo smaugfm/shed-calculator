@@ -1,6 +1,6 @@
-import type { FacadeType, ShedConfig } from '../config/types'
+import type { FacadeType, MembraneConfig, ShedConfig } from '../config/types'
 
-export type MaterialId = 'osb-floor' | 'osb-wall' | 'osb-roof' | 'cladding' | 'roofing'
+export type MaterialId = 'osb-floor' | 'osb-wall' | 'osb-roof' | 'cladding' | 'roofing' | 'membrane-wall' | 'membrane-roof'
 
 export interface MaterialSpec {
   id: MaterialId
@@ -20,11 +20,28 @@ export const FACADE_THICKNESS: Record<FacadeType, number> = {
 }
 
 export const ROOFING_THICKNESS = 8
+export const MEMBRANE_THICKNESS = 2
 
 function sheet(id: MaterialId, label: string, config: ShedConfig, thickness: number): MaterialSpec {
   const w = config.stock.sheetWidth
   const h = config.stock.sheetHeight
   return { id, label, pieceW: w, pieceH: h, courseStep: h, columnStep: w, stagger: false, thickness, dims: `${w}×${h}` }
+}
+
+// Membrane: horizontal rolls. Roll width is the course height; courses step up by (width − overlap)
+// so each overlaps the one below; the run is tiled along the roll length.
+function membrane(id: MaterialId, label: string, m: MembraneConfig): MaterialSpec {
+  return {
+    id,
+    label,
+    pieceW: m.rollLength,
+    pieceH: m.rollWidth,
+    courseStep: Math.max(1, m.rollWidth - m.overlap),
+    columnStep: m.rollLength,
+    stagger: false,
+    thickness: MEMBRANE_THICKNESS,
+    dims: `${m.rollWidth}×${m.rollLength}`,
+  }
 }
 
 export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSpec> {
@@ -58,5 +75,7 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
       thickness: ROOFING_THICKNESS,
       dims: `${sh.width}×${sh.height}`,
     },
+    'membrane-wall': membrane('membrane-wall', 'Breather membrane (walls)', config.walls.membrane),
+    'membrane-roof': membrane('membrane-roof', config.roof.covering === 'shingles' ? 'EPDM membrane (roof)' : 'Breather membrane (roof)', config.roof.membrane),
   }
 }

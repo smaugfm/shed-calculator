@@ -5,6 +5,13 @@ export interface TimberProfile {
   label: string
   thickness: Millimetres
   width: Millimetres
+  length: Millimetres // stock board length this profile is bought in
+}
+
+export interface MembraneConfig {
+  rollWidth: Millimetres // physical roll width → becomes the course height
+  rollLength: Millimetres // length of one roll
+  overlap: Millimetres // vertical overlap of each course over the one below
 }
 
 export type StructuralRole = 'gradeBeam' | 'joist' | 'rafter' | 'stud' | 'plate' | 'header' | 'batten' | 'fascia'
@@ -85,6 +92,7 @@ export interface WallConfig {
   osbThickness: Millimetres
   facadeType: FacadeType
   cladding: { width: Millimetres; length: Millimetres }
+  membrane: MembraneConfig
   topPlateCount: 1 | 2
   bottomPlateCount: 1 | 2
 }
@@ -106,6 +114,7 @@ export interface RoofConfig {
   osbThickness: Millimetres
   shingle: ShingleSpec
   metalShingle: ShingleSpec
+  membrane: MembraneConfig
   overhangs: { front: Millimetres; rear: Millimetres; sides: Millimetres }
 }
 
@@ -137,7 +146,6 @@ export interface ShedConfig {
   fasteners: FastenerConfig
   preset: PresetName
   stock: {
-    timberLength: Millimetres
     sheetWidth: Millimetres
     sheetHeight: Millimetres
   }

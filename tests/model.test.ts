@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Member, Panel, PanelKind, Piece, ShedModel } from '../src/model/types'
+import type { Member, Piece, ShedModel } from '../src/model/types'
 import type { ShedConfig, StructuralRole } from '../src/config/types'
 import type { MaterialId } from '../src/model/materials'
 import { defaultConfig } from '../src/config/defaults'
@@ -7,6 +7,7 @@ import { buildModel } from '../src/model/build'
 import { findProfile } from '../src/config/profiles'
 import { applyPreset } from '../src/config/presets'
 import { spacedPositions } from '../src/model/floor'
+import { computeBom } from '../src/bom/compute'
 
 const TOL = 1 // mm
 
@@ -17,7 +18,6 @@ const beam = findProfile(cfg.profiles, cfg.roles.gradeBeam)
 const joist = findProfile(cfg.profiles, cfg.roles.joist)
 
 const role = (m: ShedModel, r: StructuralRole): Member[] => m.members.filter((x) => x.role === r)
-const kind = (m: ShedModel, k: PanelKind): Panel[] => m.panels.filter((p) => p.kind === k)
 const piecesOf = (m: ShedModel, id: MaterialId): Piece[] => m.pieces.filter((p) => p.materialId === id)
 const near = (a: number, b: number) => Math.abs(a - b) <= TOL
 
@@ -184,16 +184,18 @@ describe('roof', () => {
 
   it('applies independent front/rear/side overhangs', () => {
     const m = buildModel({ ...cfg, roof: { ...cfg.roof, overhangs: { front: 300, rear: 100, sides: 50 } } })
-    const deck = m.panels.find((p) => p.kind === 'membrane-roof')!
-    expect(deck.origin.z).toBeCloseTo(-300, 5)
-    expect(deck.origin.z + deck.v.z).toBeCloseTo(cfg.base.depth + 100, 5)
-    expect(deck.origin.x).toBeCloseTo(-50, 5)
-    expect(deck.origin.x + deck.u.x).toBeCloseTo(cfg.base.width + 50, 5)
+    const osb = piecesOf(m, 'osb-roof')
+    const xs = osb.flatMap((p) => p.uv.map((c) => p.origin.x + c.u * p.uDir.x + c.v * p.vDir.x))
+    const zs = osb.flatMap((p) => p.uv.map((c) => p.origin.z + c.u * p.uDir.z + c.v * p.vDir.z))
+    expect(Math.min(...xs)).toBeCloseTo(-50, 0)
+    expect(Math.max(...xs)).toBeCloseTo(cfg.base.width + 50, 0)
+    expect(Math.min(...zs)).toBeCloseTo(-300, 0)
+    expect(Math.max(...zs)).toBeCloseTo(cfg.base.depth + 100, 0)
   })
 
   it('stacks roofing outside membrane outside OSB', () => {
     const osbOff = piecesOf(model, 'osb-roof')[0].offset
-    const memOff = kind(model, 'membrane-roof')[0].offset
+    const memOff = piecesOf(model, 'membrane-roof')[0].offset
     const roofOff = piecesOf(model, 'roofing')[0].offset
     expect(memOff).toBeGreaterThan(osbOff)
     expect(roofOff).toBeGreaterThan(memOff)
@@ -201,7 +203,7 @@ describe('roof', () => {
 })
 
 describe('discrete materials (cut list)', () => {
-  const ALL: MaterialId[] = ['osb-floor', 'osb-wall', 'osb-roof', 'cladding', 'roofing']
+  const ALL: MaterialId[] = ['osb-floor', 'osb-wall', 'osb-roof', 'cladding', 'roofing', 'membrane-wall', 'membrane-roof']
 
   it('tiles every skin material into pieces', () => {
     for (const id of ALL) expect(piecesOf(model, id).length).toBeGreaterThan(0)
@@ -227,6 +229,27 @@ describe('discrete materials (cut list)', () => {
     const overlap = piecesOf(model, 'roofing').length
     const flat = piecesOf(buildModel({ ...cfg, roof: { ...cfg.roof, shingle: { ...cfg.roof.shingle, exposure: cfg.roof.shingle.height } } }), 'roofing').length
     expect(overlap).toBeGreaterThan(flat)
+  })
+
+  it('cuts openings out of the wall membrane', () => {
+    const used = (m: ShedModel) => piecesOf(m, 'membrane-wall').reduce((s, p) => s + p.usedArea, 0)
+    expect(used(model)).toBeLessThan(used(buildModel({ ...cfg, openings: [] })))
+  })
+
+  it('overlaps membrane courses: more overlap yields more pieces', () => {
+    const more = piecesOf(buildModel({ ...cfg, walls: { ...cfg.walls, membrane: { ...cfg.walls.membrane, overlap: 750 } } }), 'membrane-wall').length
+    expect(more).toBeGreaterThan(piecesOf(model, 'membrane-wall').length)
+  })
+})
+
+describe('bom — per-profile stock length', () => {
+  const studProfileId = cfg.roles.stud
+  const studLabel = findProfile(cfg.profiles, studProfileId).label
+  const boardCount = (c: ShedConfig) => computeBom(buildModel(c), c).find((l) => l.category === 'Timber' && l.label === studLabel)!.qty
+
+  it('a shorter stock length needs more boards', () => {
+    const short = { ...cfg, profiles: cfg.profiles.map((p) => (p.id === studProfileId ? { ...p, length: 2400 } : p)) }
+    expect(boardCount(short)).toBeGreaterThan(boardCount(cfg))
   })
 })
 

@@ -53,4 +53,11 @@ describe('packLengths (1D)', () => {
     const total = lengths.reduce((s, l) => s + l, 0)
     expect(packLengths(lengths, 3600)).toBeGreaterThanOrEqual(Math.ceil(total / 3600))
   })
+
+  it('splits an item longer than the stock across boards (no negative offcut)', () => {
+    expect(packLengths([6300], 4800)).toBe(2) // 6.3 m fascia from two 4.8 m boards
+    expect(packLengths([10000], 4800)).toBe(3)
+    const boards = packLengths([6300, 4350, 6300, 4350], 4800)
+    expect(boards * 4800).toBeGreaterThanOrEqual(6300 + 4350 + 6300 + 4350)
+  })
 })

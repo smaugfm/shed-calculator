@@ -343,7 +343,7 @@ body,
 .profile-cols,
 .profile-row {
   display: grid;
-  grid-template-columns: 1fr 80px 14px 80px 80px;
+  grid-template-columns: 1fr 70px 12px 70px 70px 72px;
   gap: 6px;
   align-items: center;
 }

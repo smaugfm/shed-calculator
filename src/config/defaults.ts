@@ -30,6 +30,7 @@ export function defaultConfig(): ShedConfig {
       osbThickness: 11,
       facadeType: 'cladding',
       cladding: { width: 150, length: 3600 },
+      membrane: { rollWidth: 1500, rollLength: 50000, overlap: 150 },
       topPlateCount: 2,
       bottomPlateCount: 1,
     },
@@ -42,6 +43,7 @@ export function defaultConfig(): ShedConfig {
       osbThickness: 18,
       shingle: { width: 1000, height: 300, exposure: 145 },
       metalShingle: { width: 1100, height: 400, exposure: 350 },
+      membrane: { rollWidth: 1000, rollLength: 20000, overlap: 100 },
       overhangs: { front: 200, rear: 150, sides: 150 },
     },
     openings: [
@@ -50,6 +52,6 @@ export function defaultConfig(): ShedConfig {
     ],
     fasteners: structuredClone(DEFAULT_FASTENERS),
     preset: 'normal',
-    stock: { timberLength: 4800, sheetWidth: 1200, sheetHeight: 2400 },
+    stock: { sheetWidth: 1200, sheetHeight: 2400 },
   }
 }

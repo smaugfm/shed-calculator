@@ -3,10 +3,9 @@ import { findProfile } from '../config/profiles'
 import type { Member, Panel, Piece, Vec3 } from './types'
 import { add, length, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
 import { spacedPositions } from './floor'
-import { materialSpecs, ROOFING_THICKNESS } from './materials'
+import { MEMBRANE_THICKNESS, materialSpecs, ROOFING_THICKNESS } from './materials'
 import { tilePolygon } from './tiling'
 
-const MEMBRANE_THICKNESS = 2
 const GAP = 1.5
 
 export interface RoofResult {
@@ -77,12 +76,10 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
   }
 
   const origin: Vec3 = v(xL, bearY(zStart), zStart)
-  const uVec = v(xR - xL, 0, 0)
   const vVec = v(0, bearY(zEnd) - bearY(zStart), zEnd - zStart)
 
-  const panels: Panel[] = [makePanel('membrane-roof', origin, uVec, vVec, normal, MEMBRANE_THICKNESS, membraneOffset)]
-
-  // OSB and roofing are discrete pieces tiled over the roof plane (shingles overlap by exposure).
+  // OSB, membrane, and roofing are discrete pieces tiled over the roof plane (shingles and
+  // membrane overlap by exposure/overlap respectively).
   const specs = materialSpecs(config)
   const uLen = xR - xL
   const vLen = length(vVec)
@@ -95,8 +92,11 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
   const roofSurface = (offset: number) => ({ origin, uDir: v(1, 0, 0), vDir: normalize(vVec), normal, offset })
   const pieces: Piece[] = [
     ...tilePolygon(roofSurface(osbOffset), roofRect, [], specs['osb-roof']),
+    ...tilePolygon(roofSurface(membraneOffset), roofRect, [], specs['membrane-roof']),
     ...tilePolygon(roofSurface(roofingOffset), roofRect, [], specs.roofing),
   ]
+
+  const panels: Panel[] = []
 
   // Soffit closes the overhang ring from below, on the rafter-underside plane.
   const down = normalize(v(0, -base.depth, -delta))

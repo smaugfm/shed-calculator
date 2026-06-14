@@ -88,7 +88,10 @@ export function packLengths(lengths: number[], stockLen: number): number {
   const remaining: number[] = []
   for (const len of sorted) {
     if (len > stockLen + EPS) {
-      remaining.push(0)
+      // Longer than one stock unit: span several (joined end to end); last keeps the offcut.
+      const n = Math.ceil(len / stockLen)
+      for (let i = 0; i < n - 1; i++) remaining.push(0)
+      remaining.push(n * stockLen - len)
       continue
     }
     let placed = false

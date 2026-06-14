@@ -76,11 +76,11 @@ function osbMaterial(uLen: number, vLen: number): THREE.MeshStandardMaterial {
   return mat
 }
 
-function membraneMaterial(uLen: number, vLen: number): THREE.MeshStandardMaterial {
+function membranePieceMaterial(): THREE.MeshStandardMaterial {
   const tex = getMembraneTexture().clone()
   tex.needsUpdate = true
-  tex.repeat.set(Math.max(1, uLen / 1000), Math.max(1, vLen / 1000))
-  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, side: THREE.DoubleSide })
+  tex.repeat.set(1 / 1000, 1 / 1000)
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 })
   mat.userData.disposable = true
   return mat
 }
@@ -179,19 +179,7 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
   for (const m of model.members) layers[memberLayer(m)].add(memberMesh(m))
 
   for (const panel of model.panels) {
-    switch (panel.kind) {
-      case 'soffit':
-        layers.soffit.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
-        break
-      case 'membrane-wall':
-        layers.wallMembrane.add(panelMesh(panel, membraneMaterial(len(panel.u), len(panel.v))))
-        break
-      case 'membrane-roof':
-        layers.roofMembrane.add(panelMesh(panel, membraneMaterial(len(panel.u), len(panel.v))))
-        break
-      default:
-        break
-    }
+    if (panel.kind === 'soffit') layers.soffit.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
   }
 
   const pieceLayer: Record<MaterialId, LayerName> = {
@@ -200,11 +188,15 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     'osb-roof': 'roofOsb',
     cladding: 'cladding',
     roofing: 'roofing',
+    'membrane-wall': 'wallMembrane',
+    'membrane-roof': 'roofMembrane',
   }
   const osbMat = osbPieceMaterial()
+  const membraneMat = membranePieceMaterial()
   const claddingMat = config.walls.facadeType === 'metal' ? solidPiece(0x9aa3ab, 0.5) : solidPiece(0x9c7649, 0)
   const roofingMat = config.roof.covering === 'ventilated' ? solidPiece(0x8a9299, 0.5) : solidPiece(0x33363b, 0)
-  const pieceMat = (id: MaterialId): THREE.Material => (id === 'cladding' ? claddingMat : id === 'roofing' ? roofingMat : osbMat)
+  const pieceMat = (id: MaterialId): THREE.Material =>
+    id === 'cladding' ? claddingMat : id === 'roofing' ? roofingMat : id.startsWith('membrane') ? membraneMat : osbMat
   for (const piece of model.pieces) layers[pieceLayer[piece.materialId]].add(pieceMesh(piece, pieceMat(piece.materialId)))
 
   const center = new THREE.Vector3(

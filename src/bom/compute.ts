@@ -1,5 +1,5 @@
 import type { ShedConfig } from '../config/types'
-import { findProfile } from '../config/profiles'
+import { DEFAULT_PROFILE_LENGTH, findProfile } from '../config/profiles'
 import type { Member, Panel, PanelKind, Piece, ShedModel } from '../model/types'
 import { materialSpecs, type MaterialId } from '../model/materials'
 import { packLengths, packSheets } from '../model/nesting'
@@ -26,7 +26,7 @@ export function computeBom(model: ShedModel, config: ShedConfig): BillOfMaterial
   const lines: BillOfMaterials = []
   lines.push(...timberLines(model.members, config))
   lines.push(...pieceLines(model.pieces, config))
-  lines.push(...areaLines(model.panels, config))
+  lines.push(...areaLines(model.panels))
   lines.push(foundationLine(model))
   lines.push(...fastenerLines(model, config))
   return lines
@@ -40,14 +40,22 @@ function timberLines(members: Member[], config: ShedConfig): BomLine[] {
     entry.totalMm += m.length
     byProfile.set(m.profileId, entry)
   }
+  const memberLengths = new Map<string, number[]>()
+  for (const m of members) {
+    const arr = memberLengths.get(m.profileId) ?? []
+    arr.push(m.length)
+    memberLengths.set(m.profileId, arr)
+  }
   const lines: BomLine[] = []
   for (const [profileId, { count, totalMm }] of byProfile) {
     const profile = findProfile(config.profiles, profileId)
-    const boards = Math.ceil(totalMm / config.stock.timberLength)
+    const stockLen = profile.length > 0 ? profile.length : DEFAULT_PROFILE_LENGTH
+    const boards = packLengths(memberLengths.get(profileId) ?? [], stockLen)
+    const offcut = (boards * stockLen - totalMm) / 1000
     lines.push({
       category: 'Timber',
       label: profile.label,
-      spec: `${count} pcs · ${round(totalMm / 1000)} m total · ~${boards} × ${config.stock.timberLength / 1000} m`,
+      spec: `${boards} × ${stockLen / 1000} m boards · ${count} pcs · ${round(totalMm / 1000)} m used · ${round(offcut)} m offcut`,
       qty: boards,
       unit: 'boards',
     })
@@ -100,6 +108,28 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
     })
   }
 
+  // Membrane: rolls of fixed width — 1D-nest each strip's run length into the roll length.
+  for (const [id, m] of [
+    ['membrane-wall', config.walls.membrane],
+    ['membrane-roof', config.roof.membrane],
+  ] as const) {
+    const group = pieces.filter((p) => p.materialId === id)
+    if (group.length === 0) continue
+    const rolls = packLengths(
+      group.map((p) => pieceBBox(p).w),
+      m.rollLength,
+    )
+    const bought = (rolls * m.rollWidth * m.rollLength) / 1e6
+    const used = group.reduce((s, p) => s + p.usedArea, 0)
+    lines.push({
+      category: 'Membrane & covering',
+      label: specs[id].label,
+      spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      qty: rolls,
+      unit: 'rolls',
+    })
+  }
+
   const roof = pieces.filter((p) => p.materialId === 'roofing')
   if (roof.length > 0) {
     const bought = roof.reduce((s, p) => s + p.nominalArea, 0)
@@ -115,19 +145,11 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
   return lines
 }
 
-// Continuous goods (membrane, soffit): area only.
-function areaLines(panels: Panel[], config: ShedConfig): BomLine[] {
+// Continuous goods: only the soffit remains area-only.
+function areaLines(panels: Panel[]): BomLine[] {
   const lines: BomLine[] = []
   const soffit = panelArea(panels, 'soffit')
-  const roofMembrane = panelArea(panels, 'membrane-roof')
-  const wallMembrane = panelArea(panels, 'membrane-wall')
   if (soffit > 0) lines.push({ category: 'Sheets', label: 'Soffit OSB', spec: `${round(soffit)} m²`, qty: round(soffit), unit: 'm²' })
-  if (roofMembrane > 0) {
-    const label = config.roof.covering === 'shingles' ? 'EPDM membrane (roof)' : 'Breather membrane (roof)'
-    lines.push({ category: 'Membrane & covering', label, spec: `${round(roofMembrane)} m² (incl. overhang)`, qty: round(roofMembrane), unit: 'm²' })
-  }
-  if (wallMembrane > 0)
-    lines.push({ category: 'Membrane & covering', label: 'Breather membrane (walls)', spec: `${round(wallMembrane)} m²`, qty: round(wallMembrane), unit: 'm²' })
   return lines
 }
 

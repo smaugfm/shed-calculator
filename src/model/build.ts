@@ -15,7 +15,7 @@ export function buildModel(config: ShedConfig): ShedModel {
   const roof = buildRoof(config, floor.floorTopY)
 
   const members: Member[] = [...floor.members, ...walls.members, ...roof.members]
-  const panels: Panel[] = [...walls.panels, ...roof.panels]
+  const panels: Panel[] = [...roof.panels]
   const pieces: Piece[] = [...floor.pieces, ...walls.pieces, ...roof.pieces]
 
   const joints = {
