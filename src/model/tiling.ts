@@ -42,7 +42,7 @@ function rectMinusRect(r: UvRect, h: UvRect): UvRect[] {
   return out
 }
 
-function rectMinusRects(r: UvRect, holes: UvRect[]): UvRect[] {
+export function rectMinusRects(r: UvRect, holes: UvRect[]): UvRect[] {
   let rects = [r]
   for (const h of holes) rects = rects.flatMap((x) => rectMinusRect(x, h))
   return rects
@@ -116,6 +116,27 @@ function makePiece(surface: Surface, spec: MaterialSpec, uv: Vec2[]): Piece {
     nominalArea: (spec.pieceW * spec.pieceH) / 1e6,
     usedArea: polyArea(uv) / 1e6,
   }
+}
+
+// Insulation: one strip per framing bay. Each bay rect (already recessed off the members) is split
+// into roll-length segments (spec.pieceH) along v, cut around holes, and clipped to the convex
+// outline so the strips follow the gable rake — they never cross a stud/plate/rafter boundary.
+export function tileBays(surface: Surface, bays: UvRect[], outline: Vec2[], holes: UvRect[], spec: MaterialSpec): Piece[] {
+  const seg = spec.pieceH
+  const pieces: Piece[] = []
+  for (const bay of bays) {
+    if (bay.u1 - bay.u0 <= EPS) continue
+    for (let v = bay.v0; v < bay.v1 - EPS; v += seg) {
+      const cell: UvRect = { u0: bay.u0, u1: bay.u1, v0: v, v1: Math.min(v + seg, bay.v1) }
+      for (const r of rectMinusRects(cell, holes)) {
+        if (r.u1 - r.u0 <= EPS || r.v1 - r.v0 <= EPS) continue
+        const corners = rectCorners(r)
+        const poly = allInside(corners, outline) ? corners : clipToConvex(corners, outline)
+        if (poly.length >= 3 && polyArea(poly) > EPS * EPS) pieces.push(makePiece(surface, spec, poly))
+      }
+    }
+  }
+  return pieces
 }
 
 // Tile a convex outline (CCW, in surface UV) with pieces, cutting at the outline and around holes.

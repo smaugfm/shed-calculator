@@ -4,7 +4,7 @@ import type { Member, Panel, Piece, Vec3 } from './types'
 import { add, length, makeMember, makePanel, normalize, scale, sub, v } from './geometry'
 import { spacedPositions } from './floor'
 import { MEMBRANE_THICKNESS, materialSpecs, ROOFING_THICKNESS } from './materials'
-import { tilePolygon } from './tiling'
+import { tileBays, tilePolygon, type UvRect } from './tiling'
 
 const GAP = 1.5
 
@@ -95,6 +95,23 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
     ...tilePolygon(roofSurface(membraneOffset), roofRect, [], specs['membrane-roof']),
     ...tilePolygon(roofSurface(roofingOffset), roofRect, [], specs.roofing),
   ]
+
+  // Insulation sits in the actual rafter bays (recessed off the rafters), over the heated footprint
+  // only (not the overhangs).
+  if (config.roof.insulation.enabled) {
+    const rt = rafter.thickness / 2
+    const sortedX = [...rafterXs].sort((a, b) => a - b)
+    const vAt = (z: number) => (vLen * (z - zStart)) / (zEnd - zStart)
+    const v0 = vAt(0)
+    const v1 = vAt(base.depth)
+    const bays: UvRect[] = []
+    for (let i = 0; i < sortedX.length - 1; i++) {
+      const u0 = sortedX[i] + rt - xL
+      const u1 = sortedX[i + 1] - rt - xL
+      if (u1 - u0 > 1) bays.push({ u0, u1, v0, v1 })
+    }
+    pieces.push(...tileBays(roofSurface(rafter.width / 2), bays, roofRect, [], specs['insulation-roof']))
+  }
 
   const panels: Panel[] = []
 

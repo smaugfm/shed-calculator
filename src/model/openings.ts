@@ -1,5 +1,6 @@
 import type { OpeningConfig, TimberProfile, WallSide } from '../config/types'
 import type { Member, Vec3 } from './types'
+import type { UvRect } from './sheets'
 import { makeMember, v } from './geometry'
 import { spacedPositions } from './floor'
 
@@ -25,6 +26,9 @@ export interface OpeningFraming {
   blocked: [number, number]
   rect: ResolvedOpeningRect
   joints: number
+  // Footprints (in u / world-y) of the opening framing + the opening void, so insulation can be
+  // carved to the real cavities instead of the bare stud grid.
+  solids: UvRect[]
 }
 
 interface FramingProfiles {
@@ -85,11 +89,30 @@ export function buildOpeningFraming(
     }
   }
 
+  const ht = stud.thickness / 2
+  const hasSill = sillY > bottomPlateTop + 1
+  const sillBottom = hasSill ? Math.max(bottomPlateTop, sillY - stud.width) : sillY
+  const aboveOpen = wall.topPlatesBottom - headerTop > stud.thickness
+  const solids: UvRect[] = [
+    { u0: uStart - ht, u1: uStart + ht, v0: bottomPlateTop, v1: wall.topPlatesBottom }, // king left
+    { u0: uEnd - ht, u1: uEnd + ht, v0: bottomPlateTop, v1: wall.topPlatesBottom }, // king right
+    { u0: jackLeft - ht, u1: jackLeft + ht, v0: bottomPlateTop, v1: headY }, // jack left
+    { u0: jackRight - ht, u1: jackRight + ht, v0: bottomPlateTop, v1: headY }, // jack right
+    { u0: uStart, u1: uEnd, v0: sillBottom, v1: headerTop }, // sill + opening void + header
+  ]
+  for (const u of spacedPositions(opening.width, crippleSpacing)) {
+    const uu = uStart + u
+    if (uu <= jackLeft || uu >= jackRight) continue
+    if (aboveOpen) solids.push({ u0: uu - ht, u1: uu + ht, v0: headerTop, v1: wall.topPlatesBottom }) // cripple above
+    if (hasSill) solids.push({ u0: uu - ht, u1: uu + ht, v0: bottomPlateTop, v1: sillBottom }) // cripple below
+  }
+
   return {
     members,
     blocked: [uStart - stud.thickness, uEnd + stud.thickness],
     rect: { u0: uStart, u1: uEnd, v0: sillY, v1: headY },
     joints: members.length * 2,
+    solids,
   }
 }
 

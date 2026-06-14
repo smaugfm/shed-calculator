@@ -14,6 +14,11 @@ export interface MembraneConfig {
   overlap: Millimetres // vertical overlap of each course over the one below
 }
 
+export interface InsulationConfig {
+  enabled: boolean
+  rollLength: Millimetres // roll width is derived from the stud/rafter spacing, so only length is set
+}
+
 export type StructuralRole = 'gradeBeam' | 'joist' | 'rafter' | 'stud' | 'plate' | 'header' | 'batten' | 'fascia'
 
 export type RoleProfiles = Record<StructuralRole, string>
@@ -93,6 +98,7 @@ export interface WallConfig {
   facadeType: FacadeType
   cladding: { width: Millimetres; length: Millimetres }
   membrane: MembraneConfig
+  insulation: InsulationConfig
   topPlateCount: 1 | 2
   bottomPlateCount: 1 | 2
 }
@@ -115,6 +121,7 @@ export interface RoofConfig {
   shingle: ShingleSpec
   metalShingle: ShingleSpec
   membrane: MembraneConfig
+  insulation: InsulationConfig
   overhangs: { front: Millimetres; rear: Millimetres; sides: Millimetres }
 }
 

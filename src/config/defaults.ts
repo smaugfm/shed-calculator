@@ -31,6 +31,7 @@ export function defaultConfig(): ShedConfig {
       facadeType: 'cladding',
       cladding: { width: 150, length: 3600 },
       membrane: { rollWidth: 1500, rollLength: 50000, overlap: 150 },
+      insulation: { enabled: true, rollLength: 8000 },
       topPlateCount: 2,
       bottomPlateCount: 1,
     },
@@ -44,6 +45,7 @@ export function defaultConfig(): ShedConfig {
       shingle: { width: 1000, height: 300, exposure: 145 },
       metalShingle: { width: 1100, height: 400, exposure: 350 },
       membrane: { rollWidth: 1000, rollLength: 20000, overlap: 100 },
+      insulation: { enabled: true, rollLength: 6000 },
       overhangs: { front: 200, rear: 150, sides: 150 },
     },
     openings: [

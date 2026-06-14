@@ -1,6 +1,6 @@
 import type { BillOfMaterials, BomCategory } from '../bom/types'
 
-const CATEGORY_ORDER: BomCategory[] = ['Timber', 'Sheets', 'Membrane & covering', 'Foundation', 'Fasteners']
+const CATEGORY_ORDER: BomCategory[] = ['Timber', 'Sheets', 'Insulation', 'Membrane & covering', 'Foundation', 'Fasteners']
 
 export function BomTable({ bom }: { bom: BillOfMaterials }) {
   return (

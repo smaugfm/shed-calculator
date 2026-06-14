@@ -5,6 +5,7 @@ export interface PresetDefinition {
   floor: Partial<ShedConfig['floor']>
   walls: Pick<ShedConfig['walls'], 'studSpacing'>
   roof: Pick<ShedConfig['roof'], 'rafterSpacing'>
+  insulation: boolean
   fastenerOverrides: {
     sheathingPerimeter: number
     sheathingField: number
@@ -25,6 +26,7 @@ export const PRESETS: Record<Exclude<PresetName, 'custom'>, PresetDefinition> = 
     floor: { joistSpacing: 600 },
     walls: { studSpacing: 800 },
     roof: { rafterSpacing: 800 },
+    insulation: false,
     fastenerOverrides: { sheathingPerimeter: 200, sheathingField: 400, framingPerJoint: 2 },
   },
   normal: {
@@ -39,6 +41,7 @@ export const PRESETS: Record<Exclude<PresetName, 'custom'>, PresetDefinition> = 
     floor: { joistSpacing: 400 },
     walls: { studSpacing: 600 },
     roof: { rafterSpacing: 600 },
+    insulation: true,
     fastenerOverrides: { sheathingPerimeter: 150, sheathingField: 300, framingPerJoint: 2 },
   },
   heavy: {
@@ -53,6 +56,7 @@ export const PRESETS: Record<Exclude<PresetName, 'custom'>, PresetDefinition> = 
     floor: { joistSpacing: 300 },
     walls: { studSpacing: 400 },
     roof: { rafterSpacing: 400 },
+    insulation: true,
     fastenerOverrides: { sheathingPerimeter: 100, sheathingField: 200, framingPerJoint: 3 },
   },
 }
@@ -64,8 +68,8 @@ export function applyPreset(config: ShedConfig, preset: Exclude<PresetName, 'cus
     preset,
     roles: { ...config.roles, ...def.roles },
     floor: { ...config.floor, ...def.floor },
-    walls: { ...config.walls, studSpacing: def.walls.studSpacing },
-    roof: { ...config.roof, rafterSpacing: def.roof.rafterSpacing },
+    walls: { ...config.walls, studSpacing: def.walls.studSpacing, insulation: { ...config.walls.insulation, enabled: def.insulation } },
+    roof: { ...config.roof, rafterSpacing: def.roof.rafterSpacing, insulation: { ...config.roof.insulation, enabled: def.insulation } },
     fasteners: {
       ...config.fasteners,
       sheathing: {

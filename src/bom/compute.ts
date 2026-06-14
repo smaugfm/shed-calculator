@@ -130,6 +130,29 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
     })
   }
 
+  // Insulation: rolls as wide as the framing bay (stud / rafter spacing) — 1D-nest each strip's
+  // run length into the roll length. Two roll types.
+  for (const [id, ins, width] of [
+    ['insulation-wall', config.walls.insulation, config.walls.studSpacing],
+    ['insulation-roof', config.roof.insulation, config.roof.rafterSpacing],
+  ] as const) {
+    const group = pieces.filter((p) => p.materialId === id)
+    if (group.length === 0) continue
+    const rolls = packLengths(
+      group.map((p) => pieceBBox(p).h),
+      ins.rollLength,
+    )
+    const bought = (rolls * width * ins.rollLength) / 1e6
+    const used = group.reduce((s, p) => s + p.usedArea, 0)
+    lines.push({
+      category: 'Insulation',
+      label: specs[id].label,
+      spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      qty: rolls,
+      unit: 'rolls',
+    })
+  }
+
   const roof = pieces.filter((p) => p.materialId === 'roofing')
   if (roof.length > 0) {
     const bought = roof.reduce((s, p) => s + p.nominalArea, 0)

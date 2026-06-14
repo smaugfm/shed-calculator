@@ -6,7 +6,7 @@ import { spacedPositions } from './floor'
 import { buildOpeningFraming, type WallFrame } from './openings'
 import { subtractIntervals, type Interval, type UvRect } from './sheets'
 import { FACADE_THICKNESS, MEMBRANE_THICKNESS, materialSpecs } from './materials'
-import { tilePolygon, type Surface } from './tiling'
+import { rectMinusRects, tileBays, tilePolygon, type Surface } from './tiling'
 
 const GAP = 1.5
 
@@ -88,11 +88,14 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   const frame: WallFrame = { side, length: L, map, frameMap, normal, rectTopY, topPlatesBottom }
   const blocked: Interval[] = []
   const holes: UvRect[] = []
+  // Footprints (u / world-y) of every solid framing member, used to carve the insulation cavities.
+  const framingSolids: UvRect[] = []
   for (const opening of config.openings.filter((o) => o.wall === side)) {
     const framing = buildOpeningFraming(frame, opening, floorTopY, bottomPlateTop, { stud, header, plate }, config.walls.studSpacing)
     members.push(...framing.members)
     blocked.push(framing.blocked)
     framingJoints += framing.joints
+    framingSolids.push(...framing.solids)
     const { u0, u1, v0, v1 } = framing.rect
     holes.push({ u0, u1, v0, v1 })
     const origin = map(u0, v0)
@@ -106,6 +109,7 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   for (const u of studUs) {
     if (isBlocked(u, blocked)) continue
     members.push(makeMember('stud', stud, frameMap(u, bottomPlateTop), frameMap(u, topPlatesBottom), normal))
+    framingSolids.push({ u0: u - stud.thickness / 2, u1: u + stud.thickness / 2, v0: bottomPlateTop, v1: topPlatesBottom })
     framingJoints += 2
   }
 
@@ -155,6 +159,31 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
     ...tilePolygon(surface(membraneOffset), outline(lapOf(membraneOffset, MEMBRANE_THICKNESS)), holesUv, specs['membrane-wall']),
     ...tilePolygon(surface(claddingOffset), outline(lapOf(claddingOffset, fac)), holesUv, specs.cladding),
   ]
+
+  // Insulation sits in the *real* cavities: the wall band between the plates, minus every framing
+  // footprint (studs, king/jack/cripple studs, header, sill) and the openings. This follows the
+  // framing above/below openings correctly instead of breaking on the bare stud grid.
+  if (config.walls.insulation.enabled) {
+    const half = stud.thickness / 2
+    const GROW = 2 // small clearance so cavities don't share a face with the framing
+    const grow = (r: UvRect): UvRect => ({ u0: r.u0 - GROW, u1: r.u1 + GROW, v0: r.v0 - GROW, v1: r.v1 + GROW })
+    const band: UvRect = { u0: fStart, u1: fEnd, v0: bottomPlateTop, v1: topPlatesBottom }
+    const bays: UvRect[] = rectMinusRects(band, framingSolids.map(grow))
+      .filter((r) => r.u1 - r.u0 > 20 && r.v1 - r.v0 > 20)
+      .map((r) => ({ u0: r.u0, u1: r.u1, v0: r.v0 - floorTopY, v1: r.v1 - floorTopY }))
+    // Gable triangle: studs sit on the regular grid here (no openings), so simple per-bay strips
+    // clipped to the rake via the outline.
+    if (gableTopYAt) {
+      const bounds = [fStart, ...studUs, fEnd].sort((a, b) => a - b)
+      const maxTop = floorTopY + config.heights.max
+      for (let i = 0; i < bounds.length - 1; i++) {
+        const u0 = bounds[i] + half
+        const u1 = bounds[i + 1] - half
+        if (u1 - u0 > 1) bays.push({ u0, u1, v0: rectTopY - floorTopY, v1: maxTop - floorTopY })
+      }
+    }
+    pieces.push(...tileBays(surface(-stud.width / 2), bays, outline(0), [], specs['insulation-wall']))
+  }
 
   return { members, pieces, openings, framingJoints }
 }

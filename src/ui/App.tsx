@@ -6,8 +6,17 @@ import { BomTable } from './BomTable'
 import { Toolbar } from './Toolbar'
 import { Viewport, type ViewportHandle } from './Viewport'
 import { LAYER_NAMES, type LayerName } from '../viewer/render'
+import type { ShedConfig } from '../config/types'
 
 const LAYERS_KEY = 'shed-calculator:layers'
+
+function hiddenLayers(config: ShedConfig): LayerName[] {
+  const hidden: LayerName[] = []
+  if (!(config.roof.covering === 'ventilated' && config.roof.battens)) hidden.push('roofBattens')
+  if (!config.walls.insulation.enabled) hidden.push('wallInsulation')
+  if (!config.roof.insulation.enabled) hidden.push('roofInsulation')
+  return hidden
+}
 
 function allLayersVisible(): Record<LayerName, boolean> {
   return Object.fromEntries(LAYER_NAMES.map((n) => [n, true])) as Record<LayerName, boolean>
@@ -52,7 +61,7 @@ export function App() {
       />
       <div className="main">
         <aside className="sidebar left">
-          <LayersPanel layers={layers} setLayers={setLayers} hidden={config.roof.covering === 'ventilated' && config.roof.battens ? [] : ['roofBattens']} />
+          <LayersPanel layers={layers} setLayers={setLayers} hidden={hiddenLayers(config)} />
           <ConfigPanel config={config} setConfig={setConfig} />
         </aside>
         <Viewport ref={viewportRef} model={model} config={config} rulerActive={rulerActive} layers={layers} />

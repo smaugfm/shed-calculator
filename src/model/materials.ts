@@ -1,6 +1,16 @@
 import type { FacadeType, MembraneConfig, ShedConfig } from '../config/types'
+import { findProfile } from '../config/profiles'
 
-export type MaterialId = 'osb-floor' | 'osb-wall' | 'osb-roof' | 'cladding' | 'roofing' | 'membrane-wall' | 'membrane-roof'
+export type MaterialId =
+  | 'osb-floor'
+  | 'osb-wall'
+  | 'osb-roof'
+  | 'cladding'
+  | 'roofing'
+  | 'membrane-wall'
+  | 'membrane-roof'
+  | 'insulation-wall'
+  | 'insulation-roof'
 
 export interface MaterialSpec {
   id: MaterialId
@@ -21,6 +31,9 @@ export const FACADE_THICKNESS: Record<FacadeType, number> = {
 
 export const ROOFING_THICKNESS = 8
 export const MEMBRANE_THICKNESS = 2
+// Insulation sits recessed inside the framing depth (per face) so its surfaces don't tear against
+// the stud/rafter faces.
+export const INSULATION_RECESS = 5
 
 function sheet(id: MaterialId, label: string, config: ShedConfig, thickness: number): MaterialSpec {
   const w = config.stock.sheetWidth
@@ -44,7 +57,26 @@ function membrane(id: MaterialId, label: string, m: MembraneConfig): MaterialSpe
   }
 }
 
+// Insulation: vertical rolls, one per framing bay. The roll width is the bay (stud/rafter spacing);
+// it unrolls along the surface height/slope, cut into roll-length segments. Thickness is the framing
+// depth less a recess per face (see INSULATION_RECESS) so it tucks inside the studs/rafters.
+function insulation(id: MaterialId, label: string, rollLength: number, spacing: number, thickness: number): MaterialSpec {
+  return {
+    id,
+    label,
+    pieceW: spacing,
+    pieceH: rollLength,
+    courseStep: rollLength,
+    columnStep: spacing,
+    stagger: false,
+    thickness,
+    dims: `${spacing}×${rollLength}`,
+  }
+}
+
 export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSpec> {
+  const stud = findProfile(config.profiles, config.roles.stud)
+  const rafter = findProfile(config.profiles, config.roles.rafter)
   const clad = config.walls.cladding
   const facadeLabel = config.walls.facadeType === 'metal' ? 'Facade — corrugated metal' : 'Facade — timber cladding'
   const sh = config.roof.covering === 'shingles' ? config.roof.shingle : config.roof.metalShingle
@@ -77,5 +109,19 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
     },
     'membrane-wall': membrane('membrane-wall', 'Breather membrane (walls)', config.walls.membrane),
     'membrane-roof': membrane('membrane-roof', config.roof.covering === 'shingles' ? 'EPDM membrane (roof)' : 'Breather membrane (roof)', config.roof.membrane),
+    'insulation-wall': insulation(
+      'insulation-wall',
+      'Mineral wool (walls)',
+      config.walls.insulation.rollLength,
+      config.walls.studSpacing,
+      Math.max(1, stud.width - 2 * INSULATION_RECESS),
+    ),
+    'insulation-roof': insulation(
+      'insulation-roof',
+      'Mineral wool (roof)',
+      config.roof.insulation.rollLength,
+      config.roof.rafterSpacing,
+      Math.max(1, rafter.width - 2 * INSULATION_RECESS),
+    ),
   }
 }

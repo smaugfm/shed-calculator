@@ -192,6 +192,19 @@ export function ConfigPanel({ config, setConfig }: Props) {
           max={config.walls.membrane.rollWidth - 50}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, overlap: v } } }))}
         />
+        <CheckboxRow
+          label="Insulation"
+          checked={config.walls.insulation.enabled}
+          title="Mineral-wool rolls in the stud cavity"
+          onChange={(b) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, insulation: { ...c.walls.insulation, enabled: b } } }))}
+        />
+        <NumberRow
+          label="Insulation roll length"
+          value={config.walls.insulation.rollLength}
+          min={1000}
+          max={50000}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, insulation: { ...c.walls.insulation, rollLength: v } } }))}
+        />
         <SelectRow
           label="Bottom plate"
           value={String(config.walls.bottomPlateCount)}
@@ -266,6 +279,19 @@ export function ConfigPanel({ config, setConfig }: Props) {
           min={0}
           max={config.roof.membrane.rollWidth - 50}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, overlap: v } } }))}
+        />
+        <CheckboxRow
+          label="Insulation"
+          checked={config.roof.insulation.enabled}
+          title="Mineral-wool rolls in the rafter cavity"
+          onChange={(b) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, insulation: { ...c.roof.insulation, enabled: b } } }))}
+        />
+        <NumberRow
+          label="Insulation roll length"
+          value={config.roof.insulation.rollLength}
+          min={1000}
+          max={50000}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, insulation: { ...c.roof.insulation, rollLength: v } } }))}
         />
         <NumberRow
           label="Overhang front"

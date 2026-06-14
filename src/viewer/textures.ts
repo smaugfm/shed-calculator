@@ -200,6 +200,42 @@ export function getMetalShingleTexture(): THREE.CanvasTexture {
   return metalShingleTexture
 }
 
+let insulationTexture: THREE.CanvasTexture | null = null
+
+export function getInsulationTexture(): THREE.CanvasTexture {
+  if (insulationTexture) return insulationTexture
+  insulationTexture = makeTexture((ctx, size) => {
+    ctx.fillStyle = '#e8d98a'
+    ctx.fillRect(0, 0, size, size)
+    // Dense fibrous strands, mostly horizontal, in pale wool tones.
+    const fibreColors = ['#f1e7ab', '#dcc874', '#eadd8f', '#cdb863', '#f6efc4']
+    for (let i = 0; i < 16000; i++) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const a = (Math.random() - 0.5) * 0.6
+      const len = 10 + Math.random() * 26
+      ctx.globalAlpha = 0.12 + Math.random() * 0.18
+      ctx.strokeStyle = fibreColors[(Math.random() * fibreColors.length) | 0]
+      ctx.lineWidth = 0.6 + Math.random() * 1.2
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len)
+      ctx.stroke()
+    }
+    // Soft mottled clumps for the fluffy depth.
+    ctx.globalAlpha = 0.06
+    for (let i = 0; i < 600; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#fffbe0' : '#b8a259'
+      const r = 6 + Math.random() * 18
+      ctx.beginPath()
+      ctx.arc(Math.random() * size, Math.random() * size, r, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  })
+  return insulationTexture
+}
+
 let metalTexture: THREE.CanvasTexture | null = null
 
 export function getMetalTexture(): THREE.CanvasTexture {

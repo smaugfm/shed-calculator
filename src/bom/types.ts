@@ -1,4 +1,4 @@
-export type BomCategory = 'Timber' | 'Sheets' | 'Membrane & covering' | 'Foundation' | 'Fasteners'
+export type BomCategory = 'Timber' | 'Sheets' | 'Insulation' | 'Membrane & covering' | 'Foundation' | 'Fasteners'
 
 export interface BomLine {
   category: BomCategory

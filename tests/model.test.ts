@@ -242,6 +242,83 @@ describe('discrete materials (cut list)', () => {
   })
 })
 
+describe('insulation', () => {
+  const noIns = buildModel({
+    ...cfg,
+    walls: { ...cfg.walls, insulation: { ...cfg.walls.insulation, enabled: false } },
+    roof: { ...cfg.roof, insulation: { ...cfg.roof.insulation, enabled: false } },
+  })
+
+  it('emits cavity pieces only when enabled', () => {
+    expect(piecesOf(model, 'insulation-wall').length).toBeGreaterThan(0)
+    expect(piecesOf(model, 'insulation-roof').length).toBeGreaterThan(0)
+    expect(piecesOf(noIns, 'insulation-wall').length).toBe(0)
+    expect(piecesOf(noIns, 'insulation-roof').length).toBe(0)
+  })
+
+  it('sits inboard of the OSB (in the framing cavity)', () => {
+    expect(piecesOf(model, 'insulation-wall')[0].offset).toBeLessThan(piecesOf(model, 'osb-wall')[0].offset)
+    expect(piecesOf(model, 'insulation-roof')[0].offset).toBeLessThan(piecesOf(model, 'osb-roof')[0].offset)
+  })
+
+  it('is recessed within the framing depth (no face tearing)', () => {
+    const stud = findProfile(cfg.profiles, cfg.roles.stud)
+    const rafter = findProfile(cfg.profiles, cfg.roles.rafter)
+    const wall = piecesOf(model, 'insulation-wall')[0]
+    const roof = piecesOf(model, 'insulation-roof')[0]
+    expect(wall.thickness).toBeLessThan(stud.width)
+    expect(wall.thickness).toBeGreaterThan(stud.width - 20)
+    expect(roof.thickness).toBeLessThan(rafter.width)
+    expect(roof.thickness).toBeGreaterThan(rafter.width - 20)
+  })
+
+  it('keeps wall insulation strips between the studs (within bay bounds)', () => {
+    const stud = findProfile(cfg.profiles, cfg.roles.stud)
+    const studUsByWall = spacedPositions(cfg.base.width, cfg.walls.studSpacing)
+    // The widest a single strip can be is one stud bay minus the recess on both sides.
+    const maxBay = cfg.walls.studSpacing - stud.thickness
+    for (const p of piecesOf(model, 'insulation-wall')) {
+      const us = p.uv.map((c) => c.u)
+      expect(Math.max(...us) - Math.min(...us)).toBeLessThanOrEqual(maxBay + 1)
+    }
+    expect(studUsByWall.length).toBeGreaterThan(0)
+  })
+
+  it('cuts openings out of the wall insulation', () => {
+    const used = (m: ShedModel) => piecesOf(m, 'insulation-wall').reduce((s, p) => s + p.usedArea, 0)
+    expect(used(model)).toBeLessThan(used(buildModel({ ...cfg, openings: [] })))
+  })
+
+  it('fills above-header insulation on the real king/cripple grid, not the bare stud grid', () => {
+    // Front-wall insulation pieces (origin at z≈0, outward normal −z). uv u→world x, v→y−floorTopY.
+    const front = piecesOf(model, 'insulation-wall').filter((p) => Math.abs(p.origin.z) < 1 && p.normal.z < 0)
+    const covers = (u: number, v: number) =>
+      front.some((p) => {
+        const us = p.uv.map((c) => c.u)
+        const vs = p.uv.map((c) => c.v)
+        return Math.min(...us) < u && u < Math.max(...us) && Math.min(...vs) < v && v < Math.max(...vs)
+      })
+    // Default window: offset 1600, width 1000 → kings at 1600/2600, one cripple at 2200; head ≈ 1800,
+    // so the above-header band is ~v ∈ [1945, 2910].
+    expect(covers(1800, 2300)).toBe(true) // no stud at the global-grid 1800 here → must be insulated (was the bug)
+    expect(covers(2200, 2300)).toBe(false) // a real cripple stud sits at 2200 → genuine gap
+  })
+
+  it('bills two roll types sized to the framing spacing, no negative offcut', () => {
+    const bom = computeBom(model, cfg)
+    const wall = bom.find((l) => l.category === 'Insulation' && l.label === 'Mineral wool (walls)')!
+    const roof = bom.find((l) => l.category === 'Insulation' && l.label === 'Mineral wool (roof)')!
+    expect(wall.spec).toContain(`${cfg.walls.studSpacing}×`)
+    expect(roof.spec).toContain(`${cfg.roof.rafterSpacing}×`)
+    expect(wall.qty).toBeGreaterThan(0)
+    expect(roof.qty).toBeGreaterThan(0)
+    for (const line of [wall, roof]) {
+      const offcut = Number(line.spec.match(/·\s*([-\d.]+)\s*m²\s*offcut/)![1])
+      expect(offcut).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
 describe('bom — per-profile stock length', () => {
   const studProfileId = cfg.roles.stud
   const studLabel = findProfile(cfg.profiles, studProfileId).label
@@ -269,6 +346,17 @@ describe('presets', () => {
     expect(applyPreset(cfg, 'light').walls.studSpacing).toBe(800)
     expect(applyPreset(cfg, 'normal').walls.studSpacing).toBe(600)
     expect(applyPreset(cfg, 'heavy').walls.studSpacing).toBe(400)
+  })
+
+  it('enables insulation for normal/heavy and disables it for light', () => {
+    for (const grade of ['normal', 'heavy'] as const) {
+      const p = applyPreset(cfg, grade)
+      expect(p.walls.insulation.enabled).toBe(true)
+      expect(p.roof.insulation.enabled).toBe(true)
+    }
+    const light = applyPreset(cfg, 'light')
+    expect(light.walls.insulation.enabled).toBe(false)
+    expect(light.roof.insulation.enabled).toBe(false)
   })
 })
 

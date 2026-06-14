@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import type { ShedConfig } from '../config/types'
-import type { Member, Panel, Piece, ShedModel, Vec3 } from '../model/types'
+import type { Member, Panel, Piece, ShedModel, Vec2, Vec3 } from '../model/types'
 import type { MaterialId } from '../model/materials'
-import { getMembraneTexture, getOsbTexture } from './textures'
+import { getInsulationTexture, getMembraneTexture, getOsbTexture } from './textures'
 
 export type LayerName =
   | 'piles'
@@ -12,6 +12,7 @@ export type LayerName =
   | 'wallFraming'
   | 'wallOsb'
   | 'wallMembrane'
+  | 'wallInsulation'
   | 'battens'
   | 'cladding'
   | 'rafters'
@@ -20,6 +21,7 @@ export type LayerName =
   | 'roofBattens'
   | 'roofOsb'
   | 'roofMembrane'
+  | 'roofInsulation'
   | 'roofing'
 
 export interface LayerMeta {
@@ -34,6 +36,7 @@ export const LAYERS: LayerMeta[] = [
   { name: 'joists', label: 'Joists & rim', group: 'Floor' },
   { name: 'floorDeck', label: 'OSB deck', group: 'Floor' },
   { name: 'wallFraming', label: 'Studs, plates, headers', group: 'Walls' },
+  { name: 'wallInsulation', label: 'Wall insulation', group: 'Walls' },
   { name: 'wallOsb', label: 'Wall OSB', group: 'Walls' },
   { name: 'wallMembrane', label: 'Wall membrane', group: 'Walls' },
   { name: 'battens', label: 'Battens', group: 'Walls' },
@@ -41,6 +44,7 @@ export const LAYERS: LayerMeta[] = [
   { name: 'rafters', label: 'Rafters', group: 'Roof' },
   { name: 'fascia', label: 'Fascia & barge', group: 'Roof' },
   { name: 'soffit', label: 'Soffit', group: 'Roof' },
+  { name: 'roofInsulation', label: 'Roof insulation', group: 'Roof' },
   { name: 'roofOsb', label: 'Roof OSB', group: 'Roof' },
   { name: 'roofMembrane', label: 'Roof membrane', group: 'Roof' },
   { name: 'roofBattens', label: 'Roof battens', group: 'Roof' },
@@ -85,6 +89,15 @@ function membranePieceMaterial(): THREE.MeshStandardMaterial {
   return mat
 }
 
+function insulationPieceMaterial(): THREE.MeshStandardMaterial {
+  const tex = getInsulationTexture().clone()
+  tex.needsUpdate = true
+  tex.repeat.set(1 / 500, 1 / 500)
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1 })
+  mat.userData.disposable = true
+  return mat
+}
+
 function osbPieceMaterial(): THREE.MeshStandardMaterial {
   const tex = getOsbTexture().clone()
   tex.needsUpdate = true
@@ -100,9 +113,46 @@ function solidPiece(color: number, metalness: number): THREE.MeshStandardMateria
   return mat
 }
 
-function pieceMesh(piece: Piece, material: THREE.Material): THREE.Mesh {
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Fuzz an insulation piece's perimeter: subdivide each edge and push interior points *inward only*
+// (toward the polygon interior — (nu, nv) is the left/interior normal for our CCW pieces) so the
+// rough contour always stays inside the piece's bounding box, which is already recessed off the
+// studs/rafters. Corners (original vertices) stay put so the strip keeps its overall footprint.
+function roughenOutline(uv: Vec2[], rng: () => number): Vec2[] {
+  const amp = 12
+  const seg = 60
+  const out: Vec2[] = []
+  for (let i = 0; i < uv.length; i++) {
+    const a = uv[i]
+    const b = uv[(i + 1) % uv.length]
+    const du = b.u - a.u
+    const dv = b.v - a.v
+    const len = Math.hypot(du, dv) || 1
+    const nu = -dv / len
+    const nv = du / len
+    const steps = Math.max(1, Math.round(len / seg))
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps
+      const j = s === 0 ? 0 : rng() * amp
+      out.push({ u: a.u + du * t + nu * j, v: a.v + dv * t + nv * j })
+    }
+  }
+  return out
+}
+
+function pieceMesh(piece: Piece, material: THREE.Material, rough = false): THREE.Mesh {
+  const uv = rough ? roughenOutline(piece.uv, mulberry32(Math.round(piece.uv[0].u * 7 + piece.uv[0].v * 13 + piece.origin.x))) : piece.uv
   const shape = new THREE.Shape()
-  piece.uv.forEach((p, i) => (i === 0 ? shape.moveTo(p.u, p.v) : shape.lineTo(p.u, p.v)))
+  uv.forEach((p, i) => (i === 0 ? shape.moveTo(p.u, p.v) : shape.lineTo(p.u, p.v)))
   const geom = new THREE.ExtrudeGeometry(shape, { depth: piece.thickness, bevelEnabled: false })
   const normal = vec(piece.normal)
   const mesh = new THREE.Mesh(geom, material)
@@ -190,14 +240,28 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     roofing: 'roofing',
     'membrane-wall': 'wallMembrane',
     'membrane-roof': 'roofMembrane',
+    'insulation-wall': 'wallInsulation',
+    'insulation-roof': 'roofInsulation',
   }
   const osbMat = osbPieceMaterial()
   const membraneMat = membranePieceMaterial()
+  const insulationMat = insulationPieceMaterial()
   const claddingMat = config.walls.facadeType === 'metal' ? solidPiece(0x9aa3ab, 0.5) : solidPiece(0x9c7649, 0)
   const roofingMat = config.roof.covering === 'ventilated' ? solidPiece(0x8a9299, 0.5) : solidPiece(0x33363b, 0)
   const pieceMat = (id: MaterialId): THREE.Material =>
-    id === 'cladding' ? claddingMat : id === 'roofing' ? roofingMat : id.startsWith('membrane') ? membraneMat : osbMat
-  for (const piece of model.pieces) layers[pieceLayer[piece.materialId]].add(pieceMesh(piece, pieceMat(piece.materialId)))
+    id === 'cladding'
+      ? claddingMat
+      : id === 'roofing'
+        ? roofingMat
+        : id.startsWith('insulation')
+          ? insulationMat
+          : id.startsWith('membrane')
+            ? membraneMat
+            : osbMat
+  for (const piece of model.pieces) {
+    const isInsulation = piece.materialId.startsWith('insulation')
+    layers[pieceLayer[piece.materialId]].add(pieceMesh(piece, pieceMat(piece.materialId), isInsulation))
+  }
 
   const center = new THREE.Vector3(
     (model.bbox.min.x + model.bbox.max.x) / 2,
