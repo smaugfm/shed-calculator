@@ -405,6 +405,23 @@ describe('bom — per-profile stock length', () => {
   })
 })
 
+describe('bom — costs', () => {
+  it('gives each line a stable price key and computes cost from config.prices', () => {
+    const key = `timber:${cfg.roles.stud}`
+    const priced = { ...cfg, prices: { [key]: 12.5 } }
+    const line = computeBom(buildModel(priced), priced).find((l) => l.priceKey === key)!
+    expect(line).toBeTruthy()
+    expect(line.unitPrice).toBe(12.5)
+    expect(line.cost).toBeCloseTo(line.qty * 12.5, 2)
+  })
+
+  it('defaults an unpriced line to zero cost', () => {
+    const line = computeBom(model, cfg).find((l) => l.category === 'Foundation')!
+    expect(line.unitPrice).toBe(0)
+    expect(line.cost).toBe(0)
+  })
+})
+
 describe('openings', () => {
   it('keeps openings inside the wall (clamps height below the plates + header)', () => {
     const low: ShedConfig = { ...cfg, heights: { min: cfg.heights.min, max: 1800 } }

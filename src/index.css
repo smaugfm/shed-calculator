@@ -215,9 +215,104 @@ input[aria-invalid='true'] {
   padding: 10px 12px;
 }
 
+.bom-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 12px;
+}
+
 .bom-panel h2 {
   font-size: 15px;
-  margin: 4px 0 12px;
+  margin: 0;
+}
+
+.bom-label {
+  vertical-align: top;
+}
+
+.bom-price {
+  text-align: right;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.bom-price-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.bom-price-edit em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.bom-price input[type='number'] {
+  width: 64px;
+  padding: 3px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: right;
+}
+
+.bom-cost {
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.bom-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 14px;
+  border-top: 2px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.prices-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prices-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 6px;
+}
+
+.prices-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prices-table tfoot td {
+  font-weight: 700;
+  border-bottom: none;
+}
+
+.prices-table .prices-qty {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.prices-table .prices-cost {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.prices-table input[type='number'] {
+  width: 90px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-align: right;
 }
 
 .bom-group {
@@ -252,7 +347,10 @@ input[aria-invalid='true'] {
 
 .bom-spec {
   color: var(--muted);
-  text-align: right;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+  padding: 0 2px 7px !important;
 }
 
 .layers-actions {

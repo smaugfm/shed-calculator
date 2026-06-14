@@ -159,4 +159,6 @@ export interface ShedConfig {
     sheetWidth: Millimetres
     sheetHeight: Millimetres
   }
+  prices: Record<string, number> // unit price per BOM line, keyed by its stable priceKey
+  currency: string // symbol shown next to prices/costs
 }

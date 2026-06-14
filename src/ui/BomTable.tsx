@@ -1,11 +1,31 @@
+import { Fragment, useState } from 'react'
 import type { BillOfMaterials, BomCategory } from '../bom/types'
+import type { ShedConfig } from '../config/types'
+import { NumberInput } from './fields'
+import { PricesDialog } from './PricesDialog'
+import { bomTotal, formatMoney } from './cost'
 
 const CATEGORY_ORDER: BomCategory[] = ['Timber', 'Sheets', 'Insulation', 'Membrane & covering', 'Foundation', 'Fasteners']
 
-export function BomTable({ bom }: { bom: BillOfMaterials }) {
+interface Props {
+  bom: BillOfMaterials
+  currency: string
+  setConfig: (updater: (c: ShedConfig) => ShedConfig) => void
+}
+
+export function BomTable({ bom, currency, setConfig }: Props) {
+  const [editing, setEditing] = useState(false)
+  const setPrice = (key: string, value: number) => setConfig((c) => ({ ...c, prices: { ...c.prices, [key]: value } }))
+
   return (
     <div className="bom-panel">
-      <h2>Bill of materials</h2>
+      {editing && <PricesDialog bom={bom} currency={currency} setConfig={setConfig} onClose={() => setEditing(false)} />}
+      <div className="bom-head">
+        <h2>Bill of materials</h2>
+        <button className="add-btn" onClick={() => setEditing(true)}>
+          Edit costs…
+        </button>
+      </div>
       {CATEGORY_ORDER.map((category) => {
         const lines = bom.filter((l) => l.category === category)
         if (lines.length === 0) return null
@@ -14,17 +34,34 @@ export function BomTable({ bom }: { bom: BillOfMaterials }) {
             <h3>{category}</h3>
             <table>
               <tbody>
-                {lines.map((line, i) => (
-                  <tr key={`${category}-${i}`}>
-                    <td className="bom-label">{line.label}</td>
-                    <td className="bom-spec">{line.spec}</td>
-                  </tr>
+                {lines.map((line) => (
+                  <Fragment key={line.priceKey}>
+                    <tr>
+                      <td className="bom-label">{line.label}</td>
+                      <td className="bom-price">
+                        <span className="bom-price-edit" title="Unit price">
+                          <em>{currency}</em>
+                          <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
+                        </span>
+                        <div className="bom-cost">{formatMoney(line.cost, currency)}</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="bom-spec" colSpan={2}>
+                        {line.spec}
+                      </td>
+                    </tr>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
           </div>
         )
       })}
+      <div className="bom-total">
+        <span>Total</span>
+        <span>{formatMoney(bomTotal(bom), currency)}</span>
+      </div>
     </div>
   )
 }

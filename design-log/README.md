@@ -20,5 +20,6 @@ sessions, so each carries its Implementation Results inline.
 | 0010 | [Stock Lengths & Tiled Membrane](./0010-stock-lengths-and-tiled-membrane.md) | Per-profile board lengths; membrane as overlapping rolls  |
 | 0011 | [Insulation](./0011-insulation.md)                                           | Mineral-wool cavity rolls, layer, rough edges, BOM        |
 | 0012 | [Cladding Orientation](./0012-cladding-orientation.md)                       | Vertical/horizontal cladding with perpendicular battens   |
+| 0013 | [BOM Cost Editing](./0013-bom-costs.md)                                      | Per-line unit prices, inline + dialog editing, totals     |
 
-Next log number: **0013**.
+Next log number: **0014**.

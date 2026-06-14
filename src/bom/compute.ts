@@ -5,6 +5,9 @@ import { materialSpecs, type MaterialId } from '../model/materials'
 import { packLengths, packSheets } from '../model/nesting'
 import type { BillOfMaterials, BomLine } from './types'
 
+// A line before its price is resolved; computeBom fills unitPrice/cost from config.prices.
+type Draft = Omit<BomLine, 'unitPrice' | 'cost'>
+
 function round(n: number, dp = 1): number {
   const f = 10 ** dp
   return Math.round(n * f) / f
@@ -23,16 +26,19 @@ function fastenerLabel(config: ShedConfig, specId: string): string {
 }
 
 export function computeBom(model: ShedModel, config: ShedConfig): BillOfMaterials {
-  const lines: BillOfMaterials = []
-  lines.push(...timberLines(model.members, config))
-  lines.push(...pieceLines(model.pieces, config))
-  lines.push(...areaLines(model.panels))
-  lines.push(foundationLine(model))
-  lines.push(...fastenerLines(model, config))
-  return lines
+  const drafts: Draft[] = []
+  drafts.push(...timberLines(model.members, config))
+  drafts.push(...pieceLines(model.pieces, config))
+  drafts.push(...areaLines(model.panels))
+  drafts.push(foundationLine(model))
+  drafts.push(...fastenerLines(model, config))
+  return drafts.map((d) => {
+    const unitPrice = config.prices[d.priceKey] ?? 0
+    return { ...d, unitPrice, cost: round(d.qty * unitPrice, 2) }
+  })
 }
 
-function timberLines(members: Member[], config: ShedConfig): BomLine[] {
+function timberLines(members: Member[], config: ShedConfig): Draft[] {
   const byProfile = new Map<string, { count: number; totalMm: number }>()
   for (const m of members) {
     const entry = byProfile.get(m.profileId) ?? { count: 0, totalMm: 0 }
@@ -46,7 +52,7 @@ function timberLines(members: Member[], config: ShedConfig): BomLine[] {
     arr.push(m.length)
     memberLengths.set(m.profileId, arr)
   }
-  const lines: BomLine[] = []
+  const lines: Draft[] = []
   for (const [profileId, { count, totalMm }] of byProfile) {
     const profile = findProfile(config.profiles, profileId)
     const stockLen = profile.length > 0 ? profile.length : DEFAULT_PROFILE_LENGTH
@@ -58,6 +64,7 @@ function timberLines(members: Member[], config: ShedConfig): BomLine[] {
       spec: `${boards} × ${stockLen / 1000} m boards · ${count} pcs · ${round(totalMm / 1000)} m used · ${round(offcut)} m offcut`,
       qty: boards,
       unit: 'boards',
+      priceKey: `timber:${profileId}`,
     })
   }
   return lines.sort((a, b) => a.label.localeCompare(b.label))
@@ -71,9 +78,9 @@ function pieceBBox(p: Piece): { w: number; h: number } {
 
 // Cut pieces with offcut nesting: OSB packed into 2D sheets, cladding into 1D boards, shingles
 // counted as discrete units.
-function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
+function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
   const specs = materialSpecs(config)
-  const lines: BomLine[] = []
+  const lines: Draft[] = []
   const sheetArea = (config.stock.sheetWidth * config.stock.sheetHeight) / 1e6
 
   for (const id of ['osb-floor', 'osb-wall', 'osb-roof'] as const) {
@@ -88,6 +95,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
       spec: `${sheets} sheets (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: sheets,
       unit: 'sheets',
+      priceKey: `sheet:${id}`,
     })
   }
 
@@ -104,6 +112,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
       spec: `${boards} boards (${specs.cladding.dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: boards,
       unit: 'boards',
+      priceKey: 'piece:cladding',
     })
   }
 
@@ -126,6 +135,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
       spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: rolls,
       unit: 'rolls',
+      priceKey: `piece:${id}`,
     })
   }
 
@@ -149,6 +159,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
       spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: rolls,
       unit: 'rolls',
+      priceKey: `piece:${id}`,
     })
   }
 
@@ -162,24 +173,25 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
       spec: `${roof.length} pcs (${specs.roofing.dims}) · ${round(used)} m² covered · ${round(bought - used)} m² offcut`,
       qty: roof.length,
       unit: 'pcs',
+      priceKey: 'piece:roofing',
     })
   }
   return lines
 }
 
 // Continuous goods: only the soffit remains area-only.
-function areaLines(panels: Panel[]): BomLine[] {
-  const lines: BomLine[] = []
+function areaLines(panels: Panel[]): Draft[] {
+  const lines: Draft[] = []
   const soffit = panelArea(panels, 'soffit')
-  if (soffit > 0) lines.push({ category: 'Sheets', label: 'Soffit OSB', spec: `${round(soffit)} m²`, qty: round(soffit), unit: 'm²' })
+  if (soffit > 0) lines.push({ category: 'Sheets', label: 'Soffit OSB', spec: `${round(soffit)} m²`, qty: round(soffit), unit: 'm²', priceKey: 'panel:soffit' })
   return lines
 }
 
-function foundationLine(model: ShedModel): BomLine {
-  return { category: 'Foundation', label: 'Piles', spec: `${model.piles.length} positions`, qty: model.piles.length, unit: 'pcs' }
+function foundationLine(model: ShedModel): Draft {
+  return { category: 'Foundation', label: 'Piles', spec: `${model.piles.length} positions`, qty: model.piles.length, unit: 'pcs', priceKey: 'foundation:piles' }
 }
 
-function fastenerLines(model: ShedModel, config: ShedConfig): BomLine[] {
+function fastenerLines(model: ShedModel, config: ShedConfig): Draft[] {
   const f = config.fasteners
   const specs = materialSpecs(config)
   const counts = new Map<string, number>()
@@ -209,9 +221,17 @@ function fastenerLines(model: ShedModel, config: ShedConfig): BomLine[] {
     bump(f.roofCovering.specId, Math.ceil(coveringArea * f.roofCovering.ratePerSqm))
   }
 
-  const lines: BomLine[] = []
-  for (const [specId, qty] of counts) lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${qty} pcs`, qty, unit: 'pcs' })
+  const lines: Draft[] = []
+  for (const [specId, qty] of counts)
+    lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${qty} pcs`, qty, unit: 'pcs', priceKey: `fastener:${specId}` })
   for (const [specId, litres] of adhesive)
-    lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${round(litres)} L`, qty: round(litres), unit: 'L' })
+    lines.push({
+      category: 'Fasteners',
+      label: fastenerLabel(config, specId),
+      spec: `${round(litres)} L`,
+      qty: round(litres),
+      unit: 'L',
+      priceKey: `fastener:${specId}`,
+    })
   return lines.sort((a, b) => a.label.localeCompare(b.label))
 }

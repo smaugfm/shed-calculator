@@ -38,7 +38,11 @@ function loadConfig(): ShedConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultConfig()
-    return deepMerge(defaultConfig(), JSON.parse(raw))
+    const parsed = JSON.parse(raw)
+    const merged = deepMerge(defaultConfig(), parsed)
+    // prices is a dynamic-key map — deepMerge only keeps keys present in the defaults, so restore it wholesale.
+    if (isPlainObject(parsed) && isPlainObject(parsed.prices)) merged.prices = parsed.prices as Record<string, number>
+    return merged
   } catch {
     return defaultConfig()
   }
