@@ -90,12 +90,15 @@ export interface FloorConfig {
 }
 
 export type FacadeType = 'cladding' | 'metal'
+export type CladdingOrientation = 'vertical' | 'horizontal'
 
 export interface WallConfig {
   studSpacing: Millimetres
   battenSpacing: Millimetres
   osbThickness: Millimetres
   facadeType: FacadeType
+  claddingOrientation: CladdingOrientation
+  counterBattens: boolean // add a second, perpendicular batten layer for cross ventilation
   cladding: { width: Millimetres; length: Millimetres }
   membrane: MembraneConfig
   insulation: InsulationConfig

@@ -78,6 +78,7 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
   const stud = findProfile(config.profiles, config.roles.stud)
   const rafter = findProfile(config.profiles, config.roles.rafter)
   const clad = config.walls.cladding
+  const vertical = config.walls.claddingOrientation === 'vertical'
   const facadeLabel = config.walls.facadeType === 'metal' ? 'Facade — corrugated metal' : 'Facade — timber cladding'
   const sh = config.roof.covering === 'shingles' ? config.roof.shingle : config.roof.metalShingle
   const roofingLabel = config.roof.covering === 'shingles' ? 'Asphalt shingles' : 'Metal shingles'
@@ -88,10 +89,11 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
     cladding: {
       id: 'cladding',
       label: facadeLabel,
-      pieceW: clad.width,
-      pieceH: clad.length,
-      courseStep: clad.length,
-      columnStep: clad.width,
+      // Boards run along the orientation: vertical → width across / length up; horizontal → swapped.
+      pieceW: vertical ? clad.width : clad.length,
+      pieceH: vertical ? clad.length : clad.width,
+      courseStep: vertical ? clad.length : clad.width,
+      columnStep: vertical ? clad.width : clad.length,
       stagger: false,
       thickness: FACADE_THICKNESS[config.walls.facadeType],
       dims: `${clad.width}×${clad.length}`,

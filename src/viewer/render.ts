@@ -280,7 +280,8 @@ function memberLayer(member: Member): LayerName {
     case 'rafter':
       return 'rafters'
     case 'batten':
-      return Math.abs(member.start.y - member.end.y) < 1 ? 'roofBattens' : 'battens'
+      // Roof battens run down-slope (up.y < 0); wall battens are vertical (up.y = 0) or horizontal (up.y = 1).
+      return member.up.y < -1e-6 ? 'roofBattens' : 'battens'
     case 'fascia':
       return 'fascia'
     default:

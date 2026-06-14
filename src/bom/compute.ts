@@ -93,10 +93,9 @@ function pieceLines(pieces: Piece[], config: ShedConfig): BomLine[] {
 
   const clad = pieces.filter((p) => p.materialId === 'cladding')
   if (clad.length > 0) {
-    const boards = packLengths(
-      clad.map((p) => pieceBBox(p).h),
-      config.walls.cladding.length,
-    )
+    // Nest along the board's long axis: height for vertical cladding, width for horizontal.
+    const boardLen = (p: Piece) => (config.walls.claddingOrientation === 'vertical' ? pieceBBox(p).h : pieceBBox(p).w)
+    const boards = packLengths(clad.map(boardLen), config.walls.cladding.length)
     const bought = (boards * config.walls.cladding.width * config.walls.cladding.length) / 1e6
     const used = clad.reduce((s, p) => s + p.usedArea, 0)
     lines.push({

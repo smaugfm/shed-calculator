@@ -1,5 +1,15 @@
 import { useState } from 'react'
-import type { FacadeType, OpeningConfig, OpeningType, RoofCovering, ShedConfig, ShingleSpec, StructuralRole, WallSide } from '../config/types'
+import type {
+  CladdingOrientation,
+  FacadeType,
+  OpeningConfig,
+  OpeningType,
+  RoofCovering,
+  ShedConfig,
+  ShingleSpec,
+  StructuralRole,
+  WallSide,
+} from '../config/types'
 import { CheckboxRow, NumberRow, Section, SelectRow, type Option } from './fields'
 import { ROLE_LABELS } from './labels'
 import { ProfileDialog } from './ProfileDialog'
@@ -12,6 +22,11 @@ interface Props {
 const FACADE_OPTIONS: Option[] = [
   { value: 'cladding', label: 'Timber cladding' },
   { value: 'metal', label: 'Corrugated metal' },
+]
+
+const CLADDING_ORIENTATION_OPTIONS: Option[] = [
+  { value: 'vertical', label: 'Vertical (horizontal battens)' },
+  { value: 'horizontal', label: 'Horizontal (vertical battens)' },
 ]
 
 const PLATE_COUNT_OPTIONS: Option[] = [
@@ -142,6 +157,18 @@ export function ConfigPanel({ config, setConfig }: Props) {
           value={config.walls.facadeType}
           options={FACADE_OPTIONS}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, facadeType: v as FacadeType } }))}
+        />
+        <SelectRow
+          label="Cladding direction"
+          value={config.walls.claddingOrientation}
+          options={CLADDING_ORIENTATION_OPTIONS}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, claddingOrientation: v as CladdingOrientation } }))}
+        />
+        <CheckboxRow
+          label="Counter-battens"
+          checked={config.walls.counterBattens}
+          title="Add a second, perpendicular batten layer to cross-ventilate the cladding cavity"
+          onChange={(b) => setConfig((c) => ({ ...c, walls: { ...c.walls, counterBattens: b } }))}
         />
         <NumberRow
           label="Cladding board width"

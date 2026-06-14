@@ -29,6 +29,8 @@ export function defaultConfig(): ShedConfig {
       battenSpacing: 600,
       osbThickness: 11,
       facadeType: 'cladding',
+      claddingOrientation: 'vertical',
+      counterBattens: false,
       cladding: { width: 150, length: 3600 },
       membrane: { rollWidth: 1500, rollLength: 50000, overlap: 150 },
       insulation: { enabled: true, rollLength: 8000 },

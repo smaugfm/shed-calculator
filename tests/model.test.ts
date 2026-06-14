@@ -8,6 +8,7 @@ import { findProfile } from '../src/config/profiles'
 import { applyPreset } from '../src/config/presets'
 import { spacedPositions } from '../src/model/floor'
 import { computeBom } from '../src/bom/compute'
+import { materialSpecs } from '../src/model/materials'
 
 const TOL = 1 // mm
 
@@ -158,7 +159,8 @@ describe('roof', () => {
     expect(maxX).toBeLessThanOrEqual(cfg.base.width + TOL)
   })
 
-  const roofBattens = (m: ShedModel) => role(m, 'batten').filter((b) => Math.abs(b.start.x - b.end.x) > 1)
+  // Roof battens run down-slope (up.y < 0); wall battens have up.y ≥ 0 (incl. horizontal ones).
+  const roofBattens = (m: ShedModel) => role(m, 'batten').filter((b) => b.up.y < -1e-6)
 
   it('adds roof battens only for ventilated with battens enabled', () => {
     expect(roofBattens(buildModel({ ...cfg, roof: { ...cfg.roof, covering: 'shingles' } })).length).toBe(0)
@@ -331,6 +333,64 @@ describe('insulation', () => {
       const offcut = Number(line.spec.match(/·\s*([-\d.]+)\s*m²\s*offcut/)![1])
       expect(offcut).toBeGreaterThanOrEqual(0)
     }
+  })
+})
+
+describe('cladding orientation', () => {
+  const wallBattens = (m: ShedModel) => m.members.filter((x) => x.role === 'batten' && x.up.y >= 0)
+  const isHorizontal = (b: Member) => Math.abs(b.start.y - b.end.y) < 1
+
+  it('runs wall battens perpendicular to the cladding', () => {
+    const vert = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical' } }))
+    const horiz = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal' } }))
+    expect(vert.length).toBeGreaterThan(0)
+    expect(horiz.length).toBeGreaterThan(0)
+    expect(vert.every(isHorizontal)).toBe(true) // vertical cladding → horizontal battens
+    expect(horiz.every((b) => !isHorizontal(b))).toBe(true) // horizontal cladding → vertical battens
+  })
+
+  it('lays cladding boards along the chosen orientation', () => {
+    const sv = materialSpecs({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical' } }).cladding
+    const sh = materialSpecs({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal' } }).cladding
+    expect(sv.pieceH).toBeGreaterThan(sv.pieceW) // vertical board: taller than wide
+    expect(sh.pieceW).toBeGreaterThan(sh.pieceH) // horizontal board: wider than tall
+  })
+
+  it('adds trim battens along the opening edges parallel to the batten run', () => {
+    const bw2 = findProfile(cfg.profiles, cfg.roles.batten).width / 2
+    // vertical cladding → horizontal battens → a horizontal batten just above the window head edge
+    const vert = buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical' } })
+    const win = vert.openings.find((o) => o.type === 'window' && o.wall === 'front')!
+    const headY = win.origin.y + win.height
+    const topTrim = wallBattens(vert).find((b) => isHorizontal(b) && Math.abs(b.start.y - (headY + bw2)) < 1 && Math.abs(b.start.x - win.origin.x) < 1)
+    expect(topTrim).toBeTruthy()
+    // horizontal cladding → vertical battens → a vertical batten just left of the window jamb edge
+    const horiz = buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal' } })
+    const win2 = horiz.openings.find((o) => o.type === 'window' && o.wall === 'front')!
+    const leftTrim = wallBattens(horiz).find((b) => !isHorizontal(b) && Math.abs(b.start.x - (win2.origin.x - bw2)) < 1)
+    expect(leftTrim).toBeTruthy()
+  })
+
+  it('adds a perpendicular counter-batten layer (cross ventilation) when enabled', () => {
+    const single = buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical', counterBattens: false } })
+    const dual = buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical', counterBattens: true } })
+    // single layer (vertical cladding) → only horizontal battens; dual adds vertical counter-battens
+    expect(wallBattens(single).every(isHorizontal)).toBe(true)
+    expect(wallBattens(dual).some(isHorizontal)).toBe(true)
+    expect(wallBattens(dual).some((b) => !isHorizontal(b))).toBe(true)
+    // the extra inner layer pushes the cladding outward by one batten thickness
+    const claddingOffset = (m: ShedModel) => Math.max(...m.pieces.filter((p) => p.materialId === 'cladding').map((p) => p.offset))
+    expect(claddingOffset(dual)).toBeGreaterThan(claddingOffset(single))
+  })
+
+  it('frames the opening edges the primary layer cannot reach with counter-batten trims', () => {
+    const bw2 = findProfile(cfg.profiles, cfg.roles.batten).width / 2
+    // Horizontal cladding → vertical primary (trims jambs); the counter layer must trim head/sill.
+    const m = buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal', counterBattens: true } })
+    const win = m.openings.find((o) => o.type === 'window' && o.wall === 'front')!
+    const headY = win.origin.y + win.height
+    const headTrim = wallBattens(m).find((b) => isHorizontal(b) && Math.abs(b.start.y - (headY + bw2)) < 1 && Math.abs(b.start.x - win.origin.x) < 1)
+    expect(headTrim).toBeTruthy()
   })
 })
 

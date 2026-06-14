@@ -123,22 +123,72 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
     members.push(makeMember('plate', plate, frameMap(fStart, gableTopYAt(fStart)), frameMap(fEnd, gableTopYAt(fEnd)), normal))
   }
 
-  // up = horizontal wall tangent so the batten's thickness (not width) forms the vent cavity depth.
+  // Battens run perpendicular to the cladding boards (the cladding-fixing layer). With counter-battens
+  // an inner layer runs the other way (parallel to the boards) to form a cross-ventilated cavity. The
+  // batten's thickness (not width) forms the cavity depth, so `up` is perpendicular to the run.
   const tangent = normalize(sub(map(1, 0), map(0, 0)))
-  const battenFaceOffset = config.walls.osbThickness + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
-  for (const u of spacedPositions(L, config.walls.battenSpacing)) {
-    const top = gableTopYAt ? gableTopYAt(u) - slope * (batten.thickness / 2) : rectTopY
-    const battenHoles: Interval[] = holes.filter((h) => u >= h.u0 && u <= h.u1).map((h) => [h.v0, h.v1] as Interval)
-    for (const [s0, s1] of subtractIntervals([floorTopY, top], battenHoles)) {
-      members.push(makeMember('batten', batten, add(map(u, s0), scale(normal, battenFaceOffset)), add(map(u, s1), scale(normal, battenFaceOffset)), tangent))
+  const bw2 = batten.width / 2
+  const innerBattenOffset = config.walls.osbThickness + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
+  const hasCounter = config.walls.counterBattens
+  const primaryBattenOffset = hasCounter ? innerBattenOffset + batten.thickness : innerBattenOffset
+
+  // Battens run along the wall, stepping up in height; clipped to the rake on gables. `trim` adds the
+  // edge battens that back the cladding along an opening's horizontal edges.
+  const horizontalBattens = (offset: number, trim: boolean) => {
+    const maxTop = gableTopYAt ? floorTopY + config.heights.max : rectTopY
+    for (const p of spacedPositions(maxTop - floorTopY, config.walls.battenSpacing)) {
+      const y = floorTopY + p
+      const uHi = gableTopYAt ? Math.min(L, (maxTop - y) / slope) : L
+      if (uHi <= 0) continue
+      const battenHoles: Interval[] = holes.filter((h) => y >= h.v0 && y <= h.v1).map((h) => [h.u0, h.u1] as Interval)
+      for (const [a, b] of subtractIntervals([0, uHi], battenHoles)) {
+        members.push(makeMember('batten', batten, add(map(a, y), scale(normal, offset)), add(map(b, y), scale(normal, offset)), v(0, 1, 0)))
+      }
     }
+    if (!trim) return
+    for (const h of holes) {
+      const span = (y: number) =>
+        members.push(makeMember('batten', batten, add(map(h.u0, y), scale(normal, offset)), add(map(h.u1, y), scale(normal, offset)), v(0, 1, 0)))
+      if (h.v1 + bw2 < (gableTopYAt ? gableTopYAt((h.u0 + h.u1) / 2) : rectTopY)) span(h.v1 + bw2)
+      if (h.v0 - bw2 > bottomPlateTop) span(h.v0 - bw2)
+    }
+  }
+
+  // Battens run up the wall at each spacing, cut around openings, clipped to the rake. `trim` adds the
+  // edge battens that back the cladding along an opening's vertical edges.
+  const verticalBattens = (offset: number, trim: boolean) => {
+    for (const u of spacedPositions(L, config.walls.battenSpacing)) {
+      const top = gableTopYAt ? gableTopYAt(u) - slope * (batten.thickness / 2) : rectTopY
+      const battenHoles: Interval[] = holes.filter((h) => u >= h.u0 && u <= h.u1).map((h) => [h.v0, h.v1] as Interval)
+      for (const [s0, s1] of subtractIntervals([floorTopY, top], battenHoles)) {
+        members.push(makeMember('batten', batten, add(map(u, s0), scale(normal, offset)), add(map(u, s1), scale(normal, offset)), tangent))
+      }
+    }
+    if (!trim) return
+    for (const h of holes) {
+      for (const u of [h.u0 - bw2, h.u1 + bw2]) {
+        members.push(makeMember('batten', batten, add(map(u, h.v0), scale(normal, offset)), add(map(u, h.v1), scale(normal, offset)), tangent))
+      }
+    }
+  }
+
+  const verticalCladding = config.walls.claddingOrientation === 'vertical'
+  // Primary (cladding-fixing) layer is perpendicular to the boards and carries the opening trims.
+  if (verticalCladding) horizontalBattens(primaryBattenOffset, true)
+  else verticalBattens(primaryBattenOffset, true)
+  // Counter-batten layer (inner) runs parallel to the boards for cross ventilation; it carries its
+  // own opening trims, so the perpendicular (head/sill or jamb) edges the primary layer can't reach
+  // still get a batten.
+  if (hasCounter) {
+    if (verticalCladding) verticalBattens(innerBattenOffset, true)
+    else horizontalBattens(innerBattenOffset, true)
   }
 
   const fac = FACADE_THICKNESS[config.walls.facadeType]
   const osb = config.walls.osbThickness
   const osbOffset = osb / 2
   const membraneOffset = osb + GAP + MEMBRANE_THICKNESS / 2
-  const claddingOffset = osb + 2 * GAP + MEMBRANE_THICKNESS + batten.thickness + GAP + fac / 2
+  const claddingOffset = primaryBattenOffset + batten.thickness / 2 + GAP + fac / 2
   const lapOf = (offset: number, thickness: number) => (gableTopYAt ? offset - thickness / 2 : offset + thickness / 2)
 
   // OSB, membrane, and cladding are discrete pieces, cut to the wall outline (trapezoid for gables)

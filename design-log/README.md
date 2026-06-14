@@ -19,5 +19,6 @@ sessions, so each carries its Implementation Results inline.
 | 0009 | [Nesting Cut Optimizer](./0009-nesting-cut-optimizer.md)                     | 2D/1D cutting-stock packers for the cut list              |
 | 0010 | [Stock Lengths & Tiled Membrane](./0010-stock-lengths-and-tiled-membrane.md) | Per-profile board lengths; membrane as overlapping rolls  |
 | 0011 | [Insulation](./0011-insulation.md)                                           | Mineral-wool cavity rolls, layer, rough edges, BOM        |
+| 0012 | [Cladding Orientation](./0012-cladding-orientation.md)                       | Vertical/horizontal cladding with perpendicular battens   |
 
-Next log number: **0012**.
+Next log number: **0013**.
