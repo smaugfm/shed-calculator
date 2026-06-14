@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import type { BillOfMaterials, BomCategory } from '../bom/types'
 import type { ShedConfig } from '../config/types'
 import { NumberInput } from './fields'
@@ -35,23 +35,20 @@ export function BomTable({ bom, currency, setConfig }: Props) {
             <table>
               <tbody>
                 {lines.map((line) => (
-                  <Fragment key={line.priceKey}>
-                    <tr>
-                      <td className="bom-label">{line.label}</td>
-                      <td className="bom-price">
-                        <span className="bom-price-edit" title="Unit price">
-                          <em>{currency}</em>
-                          <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
-                        </span>
-                        <div className="bom-cost">{formatMoney(line.cost, currency)}</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="bom-spec" colSpan={2}>
-                        {line.spec}
-                      </td>
-                    </tr>
-                  </Fragment>
+                  <tr key={line.priceKey}>
+                    <td className="bom-label">
+                      {line.label}
+                      <div className="bom-spec">{line.spec}</div>
+                    </td>
+                    <td className="bom-price">
+                      <span className="bom-price-edit" title={`Price per ${line.priceUnit}`}>
+                        <em>{currency}</em>
+                        <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
+                        <em>/{line.priceUnit}</em>
+                      </span>
+                      <div className="bom-cost">{formatMoney(line.cost, currency)}</div>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>

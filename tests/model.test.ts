@@ -222,9 +222,18 @@ describe('discrete materials (cut list)', () => {
   })
 
   it('has full interior pieces (no offcut) and cut edge pieces (offcut) for wall OSB', () => {
-    const g = piecesOf(model, 'osb-wall')
+    // A wall taller and wider than one sheet, no openings → at least one uncut interior sheet + cut edges.
+    const big = buildModel({ ...cfg, heights: { min: 3000, max: 3200 }, openings: [] })
+    const g = piecesOf(big, 'osb-wall')
     expect(g.some((p) => Math.abs(p.usedArea - p.nominalArea) < 1e-6)).toBe(true)
     expect(g.some((p) => p.usedArea < p.nominalArea - 1e-6)).toBe(true)
+  })
+
+  it('lays a sane amount of roofing for the default roof (overlap ~2×, not runaway)', () => {
+    const roofing = computeBom(model, cfg).find((l) => l.priceKey === 'piece:roofing')!
+    const roofArea = model.pieces.filter((p) => p.materialId === 'osb-roof').reduce((s, p) => s + p.usedArea, 0)
+    expect(roofing.billQty).toBeGreaterThan(roofArea) // shingles overlap → more than the bare roof area
+    expect(roofing.billQty).toBeLessThan(roofArea * 3) // but ~2×, not the ~6× a swapped width/height gives
   })
 
   it('models shingle overlap: lower exposure yields more shingles', () => {
@@ -288,18 +297,22 @@ describe('insulation', () => {
   })
 
   it('fills above-header insulation on the real king/cripple grid, not the bare stud grid', () => {
-    // Front-wall insulation pieces (origin at z≈0, outward normal −z). uv u→world x, v→y−floorTopY.
-    const front = piecesOf(model, 'insulation-wall').filter((p) => Math.abs(p.origin.z) < 1 && p.normal.z < 0)
+    // Pin a known front window (offset 1600, width 1000, studSpacing 600): kings at 1600/2600, one
+    // cripple at 2200; head at 1800 → above-header band ~v ∈ [1950, ...]. uv u→world x, v→y−floorTopY.
+    const wcfg: ShedConfig = {
+      ...cfg,
+      walls: { ...cfg.walls, studSpacing: 600 },
+      openings: [{ id: 'w1', wall: 'front', type: 'window', width: 1000, height: 800, sillHeight: 1000, offsetAlongWall: 1600 }],
+    }
+    const front = piecesOf(buildModel(wcfg), 'insulation-wall').filter((p) => Math.abs(p.origin.z) < 1 && p.normal.z < 0)
     const covers = (u: number, v: number) =>
       front.some((p) => {
         const us = p.uv.map((c) => c.u)
         const vs = p.uv.map((c) => c.v)
         return Math.min(...us) < u && u < Math.max(...us) && Math.min(...vs) < v && v < Math.max(...vs)
       })
-    // Default window: offset 1600, width 1000 → kings at 1600/2600, one cripple at 2200; head ≈ 1800,
-    // so the above-header band is ~v ∈ [1945, 2910].
-    expect(covers(1800, 2300)).toBe(true) // no stud at the global-grid 1800 here → must be insulated (was the bug)
-    expect(covers(2200, 2300)).toBe(false) // a real cripple stud sits at 2200 → genuine gap
+    expect(covers(1800, 2050)).toBe(true) // no stud at the global-grid 1800 here → must be insulated (was the bug)
+    expect(covers(2200, 2050)).toBe(false) // a real cripple stud sits at 2200 → genuine gap
   })
 
   it('butts below-sill insulation up to the sill bottom (no gap under the window)', () => {
@@ -341,8 +354,9 @@ describe('cladding orientation', () => {
   const isHorizontal = (b: Member) => Math.abs(b.start.y - b.end.y) < 1
 
   it('runs wall battens perpendicular to the cladding', () => {
-    const vert = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical' } }))
-    const horiz = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal' } }))
+    // Single batten layer (no counter-battens) so every batten is the primary, perpendicular layer.
+    const vert = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'vertical', counterBattens: false } }))
+    const horiz = wallBattens(buildModel({ ...cfg, walls: { ...cfg.walls, claddingOrientation: 'horizontal', counterBattens: false } }))
     expect(vert.length).toBeGreaterThan(0)
     expect(horiz.length).toBeGreaterThan(0)
     expect(vert.every(isHorizontal)).toBe(true) // vertical cladding → horizontal battens
@@ -412,13 +426,31 @@ describe('bom — costs', () => {
     const line = computeBom(buildModel(priced), priced).find((l) => l.priceKey === key)!
     expect(line).toBeTruthy()
     expect(line.unitPrice).toBe(12.5)
-    expect(line.cost).toBeCloseTo(line.qty * 12.5, 2)
+    expect(line.priceUnit).toBe('m') // timber is priced per metre
+    expect(line.cost).toBeCloseTo(line.billQty * 12.5, 2)
   })
 
   it('defaults an unpriced line to zero cost', () => {
-    const line = computeBom(model, cfg).find((l) => l.category === 'Foundation')!
+    const noPrices = { ...cfg, prices: {} }
+    const line = computeBom(buildModel(noPrices), noPrices).find((l) => l.category === 'Foundation')!
     expect(line.unitPrice).toBe(0)
     expect(line.cost).toBe(0)
+  })
+
+  it('prices linear timber per metre and area goods per m²', () => {
+    const lines = computeBom(model, cfg)
+    expect(lines.find((l) => l.category === 'Timber')!.priceUnit).toBe('m')
+    expect(lines.find((l) => l.priceKey === 'sheet:osb-roof')!.priceUnit).toBe('m²')
+    expect(lines.find((l) => l.priceKey === 'foundation:piles')!.priceUnit).toBe('pc')
+  })
+
+  it('seeds default costs into the config', () => {
+    expect(Object.keys(cfg.prices).length).toBeGreaterThan(0)
+    // some line carries a positive seeded price, and its cost follows billQty × unitPrice
+    const line = computeBom(model, cfg).find((l) => cfg.prices[l.priceKey] > 0)!
+    expect(line).toBeTruthy()
+    expect(line.unitPrice).toBe(cfg.prices[line.priceKey])
+    expect(line.cost).toBeCloseTo(line.billQty * line.unitPrice, 2)
   })
 })
 

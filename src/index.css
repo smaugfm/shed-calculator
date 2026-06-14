@@ -229,6 +229,7 @@ input[aria-invalid='true'] {
 
 .bom-label {
   vertical-align: top;
+  width: 100%; /* take the remaining width so the spec wraps here and the price stays compact */
 }
 
 .bom-price {
@@ -307,6 +308,17 @@ input[aria-invalid='true'] {
   font-weight: 600;
 }
 
+.prices-table .prices-price {
+  white-space: nowrap;
+}
+
+.prices-table .prices-price em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
 .prices-table input[type='number'] {
   width: 90px;
   padding: 4px 6px;
@@ -347,10 +359,12 @@ input[aria-invalid='true'] {
 
 .bom-spec {
   color: var(--muted);
+  font-weight: 400;
   font-size: 11px;
   line-height: 1.35;
-  white-space: normal;
-  padding: 0 2px 7px !important;
+  white-space: normal; /* override the label cell's nowrap so the spec wraps */
+  margin-top: 3px;
+  padding-bottom: 6px;
 }
 
 .layers-actions {

@@ -34,7 +34,7 @@ export function computeBom(model: ShedModel, config: ShedConfig): BillOfMaterial
   drafts.push(...fastenerLines(model, config))
   return drafts.map((d) => {
     const unitPrice = config.prices[d.priceKey] ?? 0
-    return { ...d, unitPrice, cost: round(d.qty * unitPrice, 2) }
+    return { ...d, unitPrice, cost: round(d.billQty * unitPrice, 2) }
   })
 }
 
@@ -65,6 +65,8 @@ function timberLines(members: Member[], config: ShedConfig): Draft[] {
       qty: boards,
       unit: 'boards',
       priceKey: `timber:${profileId}`,
+      billQty: round((boards * stockLen) / 1000), // bought length (m)
+      priceUnit: 'm',
     })
   }
   return lines.sort((a, b) => a.label.localeCompare(b.label))
@@ -96,6 +98,8 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
       qty: sheets,
       unit: 'sheets',
       priceKey: `sheet:${id}`,
+      billQty: round(bought),
+      priceUnit: 'm²',
     })
   }
 
@@ -113,6 +117,8 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
       qty: boards,
       unit: 'boards',
       priceKey: 'piece:cladding',
+      billQty: round(bought),
+      priceUnit: 'm²',
     })
   }
 
@@ -136,6 +142,8 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
       qty: rolls,
       unit: 'rolls',
       priceKey: `piece:${id}`,
+      billQty: round(bought),
+      priceUnit: 'm²',
     })
   }
 
@@ -160,6 +168,8 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
       qty: rolls,
       unit: 'rolls',
       priceKey: `piece:${id}`,
+      billQty: round(bought),
+      priceUnit: 'm²',
     })
   }
 
@@ -174,6 +184,8 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
       qty: roof.length,
       unit: 'pcs',
       priceKey: 'piece:roofing',
+      billQty: round(bought),
+      priceUnit: 'm²',
     })
   }
   return lines
@@ -183,12 +195,31 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
 function areaLines(panels: Panel[]): Draft[] {
   const lines: Draft[] = []
   const soffit = panelArea(panels, 'soffit')
-  if (soffit > 0) lines.push({ category: 'Sheets', label: 'Soffit OSB', spec: `${round(soffit)} m²`, qty: round(soffit), unit: 'm²', priceKey: 'panel:soffit' })
+  if (soffit > 0)
+    lines.push({
+      category: 'Sheets',
+      label: 'Soffit OSB',
+      spec: `${round(soffit)} m²`,
+      qty: round(soffit),
+      unit: 'm²',
+      priceKey: 'panel:soffit',
+      billQty: round(soffit),
+      priceUnit: 'm²',
+    })
   return lines
 }
 
 function foundationLine(model: ShedModel): Draft {
-  return { category: 'Foundation', label: 'Piles', spec: `${model.piles.length} positions`, qty: model.piles.length, unit: 'pcs', priceKey: 'foundation:piles' }
+  return {
+    category: 'Foundation',
+    label: 'Piles',
+    spec: `${model.piles.length} positions`,
+    qty: model.piles.length,
+    unit: 'pcs',
+    priceKey: 'foundation:piles',
+    billQty: model.piles.length,
+    priceUnit: 'pc',
+  }
 }
 
 function fastenerLines(model: ShedModel, config: ShedConfig): Draft[] {
@@ -223,7 +254,16 @@ function fastenerLines(model: ShedModel, config: ShedConfig): Draft[] {
 
   const lines: Draft[] = []
   for (const [specId, qty] of counts)
-    lines.push({ category: 'Fasteners', label: fastenerLabel(config, specId), spec: `${qty} pcs`, qty, unit: 'pcs', priceKey: `fastener:${specId}` })
+    lines.push({
+      category: 'Fasteners',
+      label: fastenerLabel(config, specId),
+      spec: `${qty} pcs`,
+      qty,
+      unit: 'pcs',
+      priceKey: `fastener:${specId}`,
+      billQty: qty,
+      priceUnit: 'pc',
+    })
   for (const [specId, litres] of adhesive)
     lines.push({
       category: 'Fasteners',
@@ -232,6 +272,8 @@ function fastenerLines(model: ShedModel, config: ShedConfig): Draft[] {
       qty: round(litres),
       unit: 'L',
       priceKey: `fastener:${specId}`,
+      billQty: round(litres),
+      priceUnit: 'L',
     })
   return lines.sort((a, b) => a.label.localeCompare(b.label))
 }

@@ -97,6 +97,30 @@ unpriced line ⇒ £0). `tsc` + Prettier + `vite build` clean.
   USD, EUR, ¥, UAH, PLN, kr, CHF) plus a **"Custom symbol"** text field for anything else; a typed
   custom symbol is added to the dropdown as a `Custom (…)` option. `BomTable` receives the symbol as a
   prop and shows it beside every price/cost.
-- **Spec text** is restored to a **full-width multiline grey row** under each item (its own
-  `colSpan=2` `.bom-spec` row) instead of a cramped sub-label, so long specs wrap as before. The
-  dialog's cost cells use a dedicated `.prices-cost` class (the BOM `.bom-spec` is now a block).
+- **Spec text** is a multiline grey block under the label, confined to the **left column** (the
+  label cell, `width:100%`) with `white-space: normal` to override the label cell's `nowrap` — so it
+  wraps within the label area and does not run under the price/cost on the right. The dialog's cost
+  cells use a dedicated `.prices-cost` class.
+
+### Follow-up — default costs
+
+Costs already persist (they live in `config.prices`). Added `config/prices.ts` with `DEFAULT_PRICES`
+— starting unit prices (in ₴, the default currency) keyed by the same `priceKey`s for the library
+profiles, OSB sheets, skins/covering, soffit, piles and every catalogue fastener.
+`defaultConfig().prices` is seeded from it, and `loadConfig` now **overlays stored prices onto the
+defaults** (`{ ...defaults, ...stored }`) so new default costs fill in keys a saved config hasn't set
+while the user's edits still win. **Tests:** 59 total (added: defaults are seeded and used; unpriced
+key still falls back to 0). Two stale fixtures from the simplified defaults were also made
+self-contained (counter-batten-aware battens test; a pinned window for the above-header insulation
+test).
+
+### Follow-up — price per metre / per m²
+
+Prices were per discrete purchase unit (board/sheet/roll/piece). Switched to **per linear metre**
+(timber) and **per m²** (OSB sheets, cladding, membrane, insulation, roofing, soffit), keeping
+**per piece** for piles/fasteners and **per litre** for adhesive. `BomLine` gained `billQty` (the
+amount priced, in `priceUnit`) and `priceUnit: 'm' | 'm²' | 'pc' | 'L'`; `cost = billQty × unitPrice`.
+`billQty` is the **bought** amount (boards × stock length, sheets/rolls × area), so it includes
+offcut you pay for. `DEFAULT_PRICES` re-based to per-m/m²/pc. The BOM input and the dialog show the
+unit (e.g. `₴ /m²`), and the dialog's Qty column now shows `billQty priceUnit`. **Tests:** 60 total
+(added: timber priced per m, sheets per m², piles per pc; cost = billQty × price).

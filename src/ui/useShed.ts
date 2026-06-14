@@ -40,8 +40,10 @@ function loadConfig(): ShedConfig {
     if (!raw) return defaultConfig()
     const parsed = JSON.parse(raw)
     const merged = deepMerge(defaultConfig(), parsed)
-    // prices is a dynamic-key map — deepMerge only keeps keys present in the defaults, so restore it wholesale.
-    if (isPlainObject(parsed) && isPlainObject(parsed.prices)) merged.prices = parsed.prices as Record<string, number>
+    // prices is a dynamic-key map — overlay the stored prices onto the defaults (so new default costs
+    // fill in keys the user hasn't set, while their edits win).
+    const stored = isPlainObject(parsed) && isPlainObject(parsed.prices) ? (parsed.prices as Record<string, number>) : {}
+    merged.prices = { ...defaultConfig().prices, ...stored }
     return merged
   } catch {
     return defaultConfig()

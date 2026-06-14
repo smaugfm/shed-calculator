@@ -1,6 +1,7 @@
 import type { FoundationConfig, ShedConfig } from './types'
 import { PROFILE_LIBRARY } from './profiles'
 import { DEFAULT_FASTENERS } from './fasteners'
+import { DEFAULT_PRICES } from './prices'
 
 export function deriveFoundation(countX: number, countY: number, exposedHeight = 200): FoundationConfig {
   return { countX, countY, exposedHeight }
@@ -14,7 +15,7 @@ export function defaultConfig(): ShedConfig {
     profiles: PROFILE_LIBRARY.map((p) => ({ ...p })),
     roles: {
       gradeBeam: '50x150',
-      joist: '50x100',
+      joist: '50x120',
       rafter: '50x120',
       stud: '50x100',
       plate: '50x100',
@@ -39,16 +40,16 @@ export function defaultConfig(): ShedConfig {
     },
     roof: {
       type: 'mono-pitch',
-      covering: 'shingles',
+      covering: 'ventilated',
       battens: true,
       battenSpacing: 400,
       rafterSpacing: 700,
       osbThickness: 18,
-      shingle: { width: 320, height: 1000, exposure: 145 },
-      metalShingle: { width: 1100, height: 400, exposure: 350 },
+      shingle: { width: 1000, height: 320, exposure: 145 },
+      metalShingle: { width: 1000, height: 400, exposure: 150 },
       membrane: { rollWidth: 1500, rollLength: 50000, overlap: 150 },
       insulation: { enabled: true, rollLength: 7500 },
-      overhangs: { front: 1000, rear: 200, sides: 200 },
+      overhangs: { front: 300, rear: 150, sides: 150 },
     },
     openings: [
       { id: 'door-1', wall: 'front', type: 'door', width: 1350, height: 2100, sillHeight: 0, offsetAlongWall: 1000 },
@@ -56,8 +57,8 @@ export function defaultConfig(): ShedConfig {
     ],
     fasteners: structuredClone(DEFAULT_FASTENERS),
     preset: 'normal',
-    stock: { sheetWidth: 1200, sheetHeight: 2400 },
-    prices: {},
+    stock: { sheetWidth: 1250, sheetHeight: 2500 },
+    prices: { ...DEFAULT_PRICES },
     currency: '₴',
   }
 }

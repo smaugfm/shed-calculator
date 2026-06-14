@@ -46,7 +46,7 @@ export function PricesDialog({ bom, currency, setConfig, onClose }: Props) {
             <tr>
               <th>Material</th>
               <th>Qty</th>
-              <th>Unit price ({currency})</th>
+              <th>Unit price</th>
               <th>Cost</th>
             </tr>
           </thead>
@@ -55,10 +55,13 @@ export function PricesDialog({ bom, currency, setConfig, onClose }: Props) {
               <tr key={line.priceKey}>
                 <td className="prices-label">{line.label}</td>
                 <td className="prices-qty">
-                  {line.qty} {line.unit}
+                  {line.billQty} {line.priceUnit}
                 </td>
-                <td>
+                <td className="prices-price">
                   <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
+                  <em>
+                    {currency}/{line.priceUnit}
+                  </em>
                 </td>
                 <td className="prices-cost">{formatMoney(line.cost, currency)}</td>
               </tr>
