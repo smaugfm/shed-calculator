@@ -228,3 +228,18 @@ between-plates band, instead of assuming a grid.
 **Tests:** 50 total (added a regression: above the default window header, insulation must cover the
 global-grid `u=1800` — which has no stud — and must _not_ cover `u=2200` where a real cripple sits).
 `tsc` + Prettier + `vite build` clean.
+
+## Refinement 3 — below-sill insulation meets the sill (no gap under the window)
+
+A visible gap remained under the window sill. Cause: `OpeningFraming.solids` placed the sill's bottom
+at `sillY − stud.thickness/2 − stud.width/2`, assuming the sill spans its **width** (95) vertically.
+But the renderer (`orientedBox`) draws a flat horizontal member with its **thickness** running
+vertically, so the sill is only `stud.thickness` (45) tall and its bottom face is at
+`sillY − stud.thickness`. The below-sill insulation therefore stopped ~23 mm short of the sill.
+
+Fix: `sillBottom = sillY − stud.thickness` (the cripples' top, where the sill actually rests). The
+below-sill cavity now reaches the sill bottom (plus the small hidden `OVERLAP`).
+
+**Tests:** 51 total — added `butts below-sill insulation up to the sill bottom`, asserting the highest
+below-sill insulation piece within the window span reaches `sillY − stud.thickness` (≤ 5 mm overlap).
+This replaced an ad-hoc measurement script. `tsc` + Prettier + `vite build` clean.

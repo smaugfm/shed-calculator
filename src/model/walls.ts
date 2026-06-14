@@ -165,10 +165,8 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   // framing above/below openings correctly instead of breaking on the bare stud grid.
   if (config.walls.insulation.enabled) {
     const half = stud.thickness / 2
-    const GROW = 2 // small clearance so cavities don't share a face with the framing
-    const grow = (r: UvRect): UvRect => ({ u0: r.u0 - GROW, u1: r.u1 + GROW, v0: r.v0 - GROW, v1: r.v1 + GROW })
     const band: UvRect = { u0: fStart, u1: fEnd, v0: bottomPlateTop, v1: topPlatesBottom }
-    const bays: UvRect[] = rectMinusRects(band, framingSolids.map(grow))
+    const bays: UvRect[] = rectMinusRects(band, framingSolids)
       .filter((r) => r.u1 - r.u0 > 20 && r.v1 - r.v0 > 20)
       .map((r) => ({ u0: r.u0, u1: r.u1, v0: r.v0 - floorTopY, v1: r.v1 - floorTopY }))
     // Gable triangle: studs sit on the regular grid here (no openings), so simple per-bay strips

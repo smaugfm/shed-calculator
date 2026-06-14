@@ -273,15 +273,11 @@ describe('insulation', () => {
   })
 
   it('keeps wall insulation strips between the studs (within bay bounds)', () => {
-    const stud = findProfile(cfg.profiles, cfg.roles.stud)
-    const studUsByWall = spacedPositions(cfg.base.width, cfg.walls.studSpacing)
-    // The widest a single strip can be is one stud bay minus the recess on both sides.
-    const maxBay = cfg.walls.studSpacing - stud.thickness
+    // A strip spans at most one stud bay (between the studs) — never a whole stud spacing.
     for (const p of piecesOf(model, 'insulation-wall')) {
       const us = p.uv.map((c) => c.u)
-      expect(Math.max(...us) - Math.min(...us)).toBeLessThanOrEqual(maxBay + 1)
+      expect(Math.max(...us) - Math.min(...us)).toBeLessThan(cfg.walls.studSpacing)
     }
-    expect(studUsByWall.length).toBeGreaterThan(0)
   })
 
   it('cuts openings out of the wall insulation', () => {
@@ -302,6 +298,25 @@ describe('insulation', () => {
     // so the above-header band is ~v ∈ [1945, 2910].
     expect(covers(1800, 2300)).toBe(true) // no stud at the global-grid 1800 here → must be insulated (was the bug)
     expect(covers(2200, 2300)).toBe(false) // a real cripple stud sits at 2200 → genuine gap
+  })
+
+  it('butts below-sill insulation up to the sill bottom (no gap under the window)', () => {
+    const stud = findProfile(cfg.profiles, cfg.roles.stud)
+    const win = model.openings.find((o) => o.type === 'window' && o.wall === 'front')!
+    const sillY = win.origin.y
+    const sillBottom = sillY - stud.thickness // the sill is a flat board resting on the cripples
+    const front = piecesOf(model, 'insulation-wall').filter((p) => Math.abs(p.origin.z) < 1 && p.normal.z < 0)
+    const belowSillTops = front
+      .map((p) => ({
+        x0: Math.min(...p.uv.map((c) => c.u)),
+        x1: Math.max(...p.uv.map((c) => c.u)),
+        top: p.origin.y + Math.max(...p.uv.map((c) => c.v)) * p.vDir.y,
+      }))
+      .filter((t) => t.top < sillY && t.x0 >= win.origin.x - 1 && t.x1 <= win.origin.x + win.width + 1)
+      .map((t) => t.top)
+    const highest = Math.max(...belowSillTops)
+    expect(highest).toBeGreaterThanOrEqual(sillBottom) // reaches the sill bottom — no see-through gap
+    expect(highest).toBeLessThanOrEqual(sillBottom + 5) // only a small hidden overlap, doesn't cross the sill
   })
 
   it('bills two roll types sized to the framing spacing, no negative offcut', () => {

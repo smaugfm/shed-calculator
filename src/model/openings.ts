@@ -91,7 +91,9 @@ export function buildOpeningFraming(
 
   const ht = stud.thickness / 2
   const hasSill = sillY > bottomPlateTop + 1
-  const sillBottom = hasSill ? Math.max(bottomPlateTop, sillY - stud.width) : sillY
+  // The sill is a flat board (thickness running vertically) resting on the cripples, so its bottom
+  // face — where the below-sill insulation must stop — is one stud thickness below the opening sill.
+  const sillBottom = hasSill ? Math.max(bottomPlateTop, sillY - stud.thickness) : sillY
   const aboveOpen = wall.topPlatesBottom - headerTop > stud.thickness
   const solids: UvRect[] = [
     { u0: uStart - ht, u1: uStart + ht, v0: bottomPlateTop, v1: wall.topPlatesBottom }, // king left
