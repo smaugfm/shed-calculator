@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ShedConfig, StructuralRole, TimberProfile } from '../config/types'
 import { DEFAULT_PROFILE_LENGTH } from '../config/profiles'
+import { NumberInput } from './fields'
 import { ROLE_LABELS } from './labels'
 
 interface Props {
@@ -57,10 +58,10 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
             return (
               <div key={p.id} className="profile-row">
                 <input value={p.label} onChange={(e) => update(p.id, { label: e.target.value })} />
-                <input type="number" min={1} value={p.thickness} onChange={(e) => update(p.id, { thickness: Number(e.target.value) })} />
+                <NumberInput value={p.thickness} min={1} max={1000} onChange={(v) => update(p.id, { thickness: v })} />
                 <span>×</span>
-                <input type="number" min={1} value={p.width} onChange={(e) => update(p.id, { width: Number(e.target.value) })} />
-                <input type="number" min={1} value={p.length} onChange={(e) => update(p.id, { length: Number(e.target.value) })} />
+                <NumberInput value={p.width} min={1} max={1000} onChange={(v) => update(p.id, { width: v })} />
+                <NumberInput value={p.length} min={500} max={50000} onChange={(v) => update(p.id, { length: v })} />
                 <button
                   className="remove-btn"
                   disabled={used.length > 0}

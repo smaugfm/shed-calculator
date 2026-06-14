@@ -151,7 +151,8 @@ body,
   justify-content: flex-end;
 }
 
-.row.invalid input {
+.row.invalid input,
+input[aria-invalid='true'] {
   border-color: #c0392b;
   background: #fdecea;
 }

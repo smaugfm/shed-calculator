@@ -37,22 +37,39 @@ export function ConfigPanel({ config, setConfig }: Props) {
 
   const markCustom = (c: ShedConfig): ShedConfig => ({ ...c, preset: 'custom' })
   const [profilesOpen, setProfilesOpen] = useState(false)
+  const maxWall = Math.max(config.base.width, config.base.depth)
 
   return (
     <div className="config-panel">
       {profilesOpen && <ProfileDialog config={config} setConfig={setConfig} onClose={() => setProfilesOpen(false)} />}
       <Section title="Dimensions" open>
-        <NumberRow label="Base width" value={config.base.width} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, width: v } }))} />
-        <NumberRow label="Base depth" value={config.base.depth} onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, depth: v } }))} />
+        <NumberRow
+          label="Base width"
+          value={config.base.width}
+          min={1000}
+          max={50000}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, width: v } }))}
+        />
+        <NumberRow
+          label="Base depth"
+          value={config.base.depth}
+          min={1000}
+          max={50000}
+          onChange={(v) => setConfig((c) => markCustom({ ...c, base: { ...c.base, depth: v } }))}
+        />
         <NumberRow
           label="Eave height (low)"
           value={config.heights.min}
+          min={100}
+          max={20000}
           validate={(v) => (v >= config.heights.max ? 'Must be below the high eave' : undefined)}
           onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, min: v } }))}
         />
         <NumberRow
           label="Eave height (high)"
           value={config.heights.max}
+          min={100}
+          max={20000}
           validate={(v) => (v <= config.heights.min ? 'Must be above the low eave' : undefined)}
           onChange={(v) => setConfig((c) => ({ ...c, heights: { ...c.heights, max: v } }))}
         />
@@ -64,6 +81,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
           value={config.foundation.countX}
           step={1}
           min={1}
+          max={100}
           suffix="pcs"
           onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countX: v } }))}
         />
@@ -72,6 +90,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
           value={config.foundation.countY}
           step={1}
           min={1}
+          max={100}
           suffix="pcs"
           onChange={(v) => setConfig((c) => ({ ...c, foundation: { ...c.foundation, countY: v } }))}
         />
@@ -81,12 +100,16 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Joist spacing"
           value={config.floor.joistSpacing}
+          min={50}
+          max={config.base.width}
           onChange={(v) => setConfig((c) => markCustom({ ...c, floor: { ...c.floor, joistSpacing: v } }))}
         />
         <NumberRow
           label="OSB deck thickness"
           value={config.floor.deckThickness}
           step={1}
+          min={1}
+          max={100}
           onChange={(v) => setConfig((c) => ({ ...c, floor: { ...c.floor, deckThickness: v } }))}
         />
       </Section>
@@ -95,17 +118,23 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Stud spacing"
           value={config.walls.studSpacing}
+          min={50}
+          max={maxWall}
           onChange={(v) => setConfig((c) => markCustom({ ...c, walls: { ...c.walls, studSpacing: v } }))}
         />
         <NumberRow
           label="Batten spacing"
           value={config.walls.battenSpacing}
+          min={50}
+          max={maxWall}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, battenSpacing: v } }))}
         />
         <NumberRow
           label="OSB thickness"
           value={config.walls.osbThickness}
           step={1}
+          min={1}
+          max={100}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))}
         />
         <SelectRow
@@ -117,36 +146,50 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Cladding board width"
           value={config.walls.cladding.width}
+          min={20}
+          max={5000}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, width: v } } }))}
         />
         <NumberRow
           label="Cladding board length"
           value={config.walls.cladding.length}
+          min={500}
+          max={50000}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, length: v } } }))}
         />
         <NumberRow
           label="OSB sheet width"
           value={config.stock.sheetWidth}
+          min={100}
+          max={5000}
           onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))}
         />
         <NumberRow
           label="OSB sheet height"
           value={config.stock.sheetHeight}
+          min={100}
+          max={5000}
           onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))}
         />
         <NumberRow
           label="Membrane roll width"
           value={config.walls.membrane.rollWidth}
+          min={100}
+          max={5000}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, rollWidth: v } } }))}
         />
         <NumberRow
           label="Membrane roll length"
           value={config.walls.membrane.rollLength}
+          min={1000}
+          max={50000}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, rollLength: v } } }))}
         />
         <NumberRow
           label="Membrane overlap"
           value={config.walls.membrane.overlap}
+          min={0}
+          max={config.walls.membrane.rollWidth - 50}
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, membrane: { ...c.walls.membrane, overlap: v } } }))}
         />
         <SelectRow
@@ -183,48 +226,66 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Batten spacing"
           value={config.roof.battenSpacing}
+          min={50}
+          max={config.base.depth}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, battenSpacing: v } }))}
         />
         <NumberRow
           label="Rafter spacing"
           value={config.roof.rafterSpacing}
+          min={50}
+          max={config.base.width}
           onChange={(v) => setConfig((c) => markCustom({ ...c, roof: { ...c.roof, rafterSpacing: v } }))}
         />
         <NumberRow
           label="OSB thickness"
           value={config.roof.osbThickness}
           step={1}
+          min={1}
+          max={100}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))}
         />
         <ShingleRows config={config} setConfig={setConfig} />
         <NumberRow
           label="Membrane roll width"
           value={config.roof.membrane.rollWidth}
+          min={100}
+          max={5000}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, rollWidth: v } } }))}
         />
         <NumberRow
           label="Membrane roll length"
           value={config.roof.membrane.rollLength}
+          min={1000}
+          max={50000}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, rollLength: v } } }))}
         />
         <NumberRow
           label="Membrane overlap"
           value={config.roof.membrane.overlap}
+          min={0}
+          max={config.roof.membrane.rollWidth - 50}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, membrane: { ...c.roof.membrane, overlap: v } } }))}
         />
         <NumberRow
           label="Overhang front"
           value={config.roof.overhangs.front}
+          min={0}
+          max={3000}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, front: v } } }))}
         />
         <NumberRow
           label="Overhang rear"
           value={config.roof.overhangs.rear}
+          min={0}
+          max={3000}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, rear: v } } }))}
         />
         <NumberRow
           label="Overhang sides"
           value={config.roof.overhangs.sides}
+          min={0}
+          max={3000}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, overhangs: { ...c.roof.overhangs, sides: v } } }))}
         />
       </Section>
@@ -246,7 +307,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
 
       <Section title="Openings">
         {config.openings.map((op) => (
-          <OpeningEditor key={op.id} opening={op} setConfig={setConfig} />
+          <OpeningEditor key={op.id} opening={op} config={config} setConfig={setConfig} />
         ))}
         <button
           className="add-btn"
@@ -274,11 +335,15 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Sheathing perimeter spacing"
           value={config.fasteners.sheathing.perimeterSpacing}
+          min={20}
+          max={1000}
           onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, perimeterSpacing: v } } }))}
         />
         <NumberRow
           label="Sheathing field spacing"
           value={config.fasteners.sheathing.fieldSpacing}
+          min={20}
+          max={1000}
           onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, sheathing: { ...c.fasteners.sheathing, fieldSpacing: v } } }))}
         />
         <SelectRow
@@ -290,6 +355,8 @@ export function ConfigPanel({ config, setConfig }: Props) {
         <NumberRow
           label="Cladding spacing"
           value={config.fasteners.cladding.spacing}
+          min={20}
+          max={2000}
           onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, cladding: { ...c.fasteners.cladding, spacing: v } } }))}
         />
         <SelectRow
@@ -303,6 +370,7 @@ export function ConfigPanel({ config, setConfig }: Props) {
           value={config.fasteners.framing.perJoint}
           step={1}
           min={1}
+          max={10}
           suffix="pcs"
           onChange={(v) => setConfig((c) => markCustom({ ...c, fasteners: { ...c.fasteners, framing: { ...c.fasteners.framing, perJoint: v } } }))}
         />
@@ -316,6 +384,8 @@ export function ConfigPanel({ config, setConfig }: Props) {
           label="Roof covering rate / m²"
           value={config.fasteners.roofCovering.ratePerSqm}
           step={1}
+          min={1}
+          max={200}
           suffix="/m²"
           onChange={(v) => setConfig((c) => ({ ...c, fasteners: { ...c.fasteners, roofCovering: { ...c.fasteners.roofCovering, ratePerSqm: v } } }))}
         />
@@ -331,17 +401,18 @@ function ShingleRows({ config, setConfig }: Props) {
   const label = config.roof.covering === 'shingles' ? 'Shingle' : 'Metal tile'
   return (
     <>
-      <NumberRow label={`${label} width`} value={sh.width} onChange={(v) => set({ width: v })} />
-      <NumberRow label={`${label} height`} value={sh.height} onChange={(v) => set({ height: v })} />
-      <NumberRow label={`${label} exposure`} value={sh.exposure} onChange={(v) => set({ exposure: v })} />
+      <NumberRow label={`${label} width`} value={sh.width} min={50} max={5000} onChange={(v) => set({ width: v })} />
+      <NumberRow label={`${label} height`} value={sh.height} min={50} max={5000} onChange={(v) => set({ height: v })} />
+      <NumberRow label={`${label} exposure`} value={sh.exposure} min={10} max={sh.height} onChange={(v) => set({ exposure: v })} />
     </>
   )
 }
 
-function OpeningEditor({ opening, setConfig }: { opening: OpeningConfig; setConfig: Props['setConfig'] }) {
+function OpeningEditor({ opening, config, setConfig }: { opening: OpeningConfig; config: ShedConfig; setConfig: Props['setConfig'] }) {
   const update = (patch: Partial<OpeningConfig>) =>
     setConfig((c) => ({ ...c, openings: c.openings.map((o) => (o.id === opening.id ? { ...o, ...patch } : o)) }))
   const remove = () => setConfig((c) => ({ ...c, openings: c.openings.filter((o) => o.id !== opening.id) }))
+  const wallLen = opening.wall === 'front' || opening.wall === 'back' ? config.base.width : config.base.depth
 
   return (
     <div className="opening-editor">
@@ -349,10 +420,10 @@ function OpeningEditor({ opening, setConfig }: { opening: OpeningConfig; setConf
         <SelectRow label="Wall" value={opening.wall} options={WALL_OPTIONS} onChange={(v) => update({ wall: v as WallSide })} />
         <SelectRow label="Type" value={opening.type} options={OPENING_TYPE_OPTIONS} onChange={(v) => update({ type: v as OpeningType })} />
       </div>
-      <NumberRow label="Width" value={opening.width} onChange={(v) => update({ width: v })} />
-      <NumberRow label="Height" value={opening.height} onChange={(v) => update({ height: v })} />
-      <NumberRow label="Sill height" value={opening.sillHeight} onChange={(v) => update({ sillHeight: v })} />
-      <NumberRow label="Offset along wall" value={opening.offsetAlongWall} onChange={(v) => update({ offsetAlongWall: v })} />
+      <NumberRow label="Width" value={opening.width} min={100} max={wallLen} onChange={(v) => update({ width: v })} />
+      <NumberRow label="Height" value={opening.height} min={100} max={20000} onChange={(v) => update({ height: v })} />
+      <NumberRow label="Sill height" value={opening.sillHeight} min={0} max={20000} onChange={(v) => update({ sillHeight: v })} />
+      <NumberRow label="Offset along wall" value={opening.offsetAlongWall} min={0} max={wallLen} onChange={(v) => update({ offsetAlongWall: v })} />
       <button className="remove-btn" onClick={remove}>
         Remove
       </button>
