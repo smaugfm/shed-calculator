@@ -229,16 +229,19 @@ describe('discrete materials (cut list)', () => {
     expect(g.some((p) => p.usedArea < p.nominalArea - 1e-6)).toBe(true)
   })
 
-  it('lays a sane amount of roofing for the default roof (overlap ~2×, not runaway)', () => {
+  it('prices roofing on the net roof area, excluding overlap', () => {
     const roofing = computeBom(model, cfg).find((l) => l.priceKey === 'piece:roofing')!
     const roofArea = model.pieces.filter((p) => p.materialId === 'osb-roof').reduce((s, p) => s + p.usedArea, 0)
-    expect(roofing.billQty).toBeGreaterThan(roofArea) // shingles overlap → more than the bare roof area
-    expect(roofing.billQty).toBeLessThan(roofArea * 3) // but ~2×, not the ~6× a swapped width/height gives
+    expect(roofing.billQty).toBeCloseTo(roofArea, 0) // net roof surface, not the overlapping material laid
   })
 
   it('models shingle overlap: lower exposure yields more shingles', () => {
-    const overlap = piecesOf(model, 'roofing').length
-    const flat = piecesOf(buildModel({ ...cfg, roof: { ...cfg.roof, shingle: { ...cfg.roof.shingle, exposure: cfg.roof.shingle.height } } }), 'roofing').length
+    const base: ShedConfig = { ...cfg, roof: { ...cfg.roof, covering: 'shingles' } }
+    const overlap = piecesOf(buildModel(base), 'roofing').length
+    const flat = piecesOf(
+      buildModel({ ...base, roof: { ...base.roof, shingle: { ...base.roof.shingle, exposure: base.roof.shingle.height } } }),
+      'roofing',
+    ).length
     expect(overlap).toBeGreaterThan(flat)
   })
 

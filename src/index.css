@@ -489,6 +489,37 @@ input[aria-invalid='true'] {
   cursor: not-allowed;
 }
 
+.pick-panel {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  min-width: 180px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border);
+  border-left: 3px solid #ff3b30;
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.pick-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pick-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+}
+
+.pick-row span:last-child {
+  color: var(--text);
+}
+
 .ruler-label {
   background: #ff3b30;
   color: #fff;

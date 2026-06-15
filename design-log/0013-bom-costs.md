@@ -121,6 +121,8 @@ Prices were per discrete purchase unit (board/sheet/roll/piece). Switched to **p
 **per piece** for piles/fasteners and **per litre** for adhesive. `BomLine` gained `billQty` (the
 amount priced, in `priceUnit`) and `priceUnit: 'm' | 'm²' | 'pc' | 'L'`; `cost = billQty × unitPrice`.
 `billQty` is the **bought** amount (boards × stock length, sheets/rolls × area), so it includes
-offcut you pay for. `DEFAULT_PRICES` re-based to per-m/m²/pc. The BOM input and the dialog show the
+offcut you pay for. **Exception — roofing** is billed on the **net roof area** (the roof OSB tiles
+the same surface without overlap, so its area = net roof area), since a per-m² roofing price already
+accounts for shingle/tile overlap. `DEFAULT_PRICES` re-based to per-m/m²/pc. The BOM input and the dialog show the
 unit (e.g. `₴ /m²`), and the dialog's Qty column now shows `billQty priceUnit`. **Tests:** 60 total
 (added: timber priced per m, sheets per m², piles per pc; cost = billQty × price).

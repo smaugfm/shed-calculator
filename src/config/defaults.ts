@@ -40,7 +40,7 @@ export function defaultConfig(): ShedConfig {
     },
     roof: {
       type: 'mono-pitch',
-      covering: 'ventilated',
+      covering: 'shingles',
       battens: true,
       battenSpacing: 400,
       rafterSpacing: 700,

@@ -177,14 +177,17 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
   if (roof.length > 0) {
     const bought = roof.reduce((s, p) => s + p.nominalArea, 0)
     const used = roof.reduce((s, p) => s + p.usedArea, 0)
+    // Price per m² of net roof surface (overlap is already baked into a per-m² roofing price). The
+    // roof OSB tiles the same surface without overlap, so its area is the net roof area.
+    const netRoofArea = pieces.filter((p) => p.materialId === 'osb-roof').reduce((s, p) => s + p.usedArea, 0) || used
     lines.push({
       category: 'Membrane & covering',
       label: specs.roofing.label,
-      spec: `${roof.length} pcs (${specs.roofing.dims}) · ${round(used)} m² covered · ${round(bought - used)} m² offcut`,
+      spec: `${roof.length} pcs (${specs.roofing.dims}) · ${round(netRoofArea)} m² roof · ${round(used)} m² laid · ${round(bought - used)} m² offcut`,
       qty: roof.length,
       unit: 'pcs',
       priceKey: 'piece:roofing',
-      billQty: round(bought),
+      billQty: round(netRoofArea),
       priceUnit: 'm²',
     })
   }

@@ -3,6 +3,9 @@ import type { ShedConfig } from '../config/types'
 import type { Member, Panel, Piece, ShedModel, Vec2, Vec3 } from '../model/types'
 import type { MaterialId } from '../model/materials'
 import { getInsulationTexture, getMembraneTexture, getOsbTexture } from './textures'
+import { memberInfo, panelInfo, pieceInfo, pileInfo, type SelectionInfo } from './selectionInfo'
+
+export type { SelectionInfo }
 
 export type LayerName =
   | 'piles'
@@ -223,13 +226,21 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
   for (const p of model.piles) {
     const mesh = withEdges(new THREE.Mesh(new THREE.BoxGeometry(p.size, p.top - p.bottom, p.size), pile))
     mesh.position.set(p.x, (p.bottom + p.top) / 2, p.z)
+    mesh.userData.pick = pileInfo(p)
     layers.piles.add(mesh)
   }
 
-  for (const m of model.members) layers[memberLayer(m)].add(memberMesh(m))
+  for (const m of model.members) {
+    const mesh = memberMesh(m)
+    mesh.userData.pick = memberInfo(m, config)
+    layers[memberLayer(m)].add(mesh)
+  }
 
   for (const panel of model.panels) {
-    if (panel.kind === 'soffit') layers.soffit.add(panelMesh(panel, osbMaterial(len(panel.u), len(panel.v))))
+    if (panel.kind !== 'soffit') continue
+    const mesh = panelMesh(panel, osbMaterial(len(panel.u), len(panel.v)))
+    mesh.userData.pick = panelInfo(panel)
+    layers.soffit.add(mesh)
   }
 
   const pieceLayer: Record<MaterialId, LayerName> = {
@@ -260,7 +271,9 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
             : osbMat
   for (const piece of model.pieces) {
     const isInsulation = piece.materialId.startsWith('insulation')
-    layers[pieceLayer[piece.materialId]].add(pieceMesh(piece, pieceMat(piece.materialId), isInsulation))
+    const mesh = pieceMesh(piece, pieceMat(piece.materialId), isInsulation)
+    mesh.userData.pick = pieceInfo(piece, config)
+    layers[pieceLayer[piece.materialId]].add(mesh)
   }
 
   const center = new THREE.Vector3(

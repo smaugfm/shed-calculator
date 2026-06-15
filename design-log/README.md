@@ -21,5 +21,6 @@ sessions, so each carries its Implementation Results inline.
 | 0011 | [Insulation](./0011-insulation.md)                                           | Mineral-wool cavity rolls, layer, rough edges, BOM        |
 | 0012 | [Cladding Orientation](./0012-cladding-orientation.md)                       | Vertical/horizontal cladding with perpendicular battens   |
 | 0013 | [BOM Cost Editing](./0013-bom-costs.md)                                      | Per-line unit prices, inline + dialog editing, totals     |
+| 0014 | [Click-to-Select Parts](./0014-pick-selection.md)                            | 3D pick, red highlight, role/material + dimensions panel  |
 
-Next log number: **0014**.
+Next log number: **0015**.

@@ -1,9 +1,10 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ShedConfig } from '../config/types'
 import type { ShedModel } from '../model/types'
 import { Scene } from '../viewer/Scene'
 import { Ruler } from '../viewer/Ruler'
-import { buildSceneObject, type LayerName } from '../viewer/render'
+import { Selection } from '../viewer/Selection'
+import { buildSceneObject, type LayerName, type SelectionInfo } from '../viewer/render'
 import { exportGlb } from '../viewer/Exporter'
 
 export interface ViewportHandle {
@@ -21,35 +22,50 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewp
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<Scene | null>(null)
   const rulerRef = useRef<Ruler | null>(null)
+  const selectionRef = useRef<Selection | null>(null)
+  const [selected, setSelected] = useState<SelectionInfo | null>(null)
 
   useEffect(() => {
     if (!containerRef.current) return
     const scene = new Scene(containerRef.current)
     const ruler = new Ruler(scene)
+    const selection = new Selection(scene)
+    selection.onChange = setSelected
     sceneRef.current = scene
     rulerRef.current = ruler
+    selectionRef.current = selection
     return () => {
+      selection.dispose()
       ruler.dispose()
       scene.dispose()
       sceneRef.current = null
       rulerRef.current = null
+      selectionRef.current = null
     }
   }, [])
 
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene) return
+    selectionRef.current?.clear() // drop the highlight before the old group is disposed
     scene.setModel(buildSceneObject(model, config))
     for (const [name, visible] of Object.entries(layers)) {
       scene.setLayerVisible(name as LayerName, visible)
     }
   }, [model, config, layers])
 
+  // The ruler and selection both consume clicks — only one is active at a time.
   useEffect(() => {
+    const selection = selectionRef.current
     const ruler = rulerRef.current
-    if (!ruler) return
-    if (rulerActive && !ruler.isActive) ruler.enable()
-    if (!rulerActive && ruler.isActive) ruler.disable()
+    if (!selection || !ruler) return
+    if (rulerActive) {
+      if (ruler.isActive === false) ruler.enable()
+      if (selection.isActive) selection.disable()
+    } else {
+      if (ruler.isActive) ruler.disable()
+      if (!selection.isActive) selection.enable()
+    }
   }, [rulerActive])
 
   useImperativeHandle(ref, () => ({
@@ -58,5 +74,19 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewp
     },
   }))
 
-  return <div className="viewport" ref={containerRef} />
+  return (
+    <div className="viewport" ref={containerRef}>
+      {selected && (
+        <div className="pick-panel">
+          <div className="pick-title">{selected.title}</div>
+          {selected.rows.map(([label, value]) => (
+            <div className="pick-row" key={label}>
+              <span>{label}</span>
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 })

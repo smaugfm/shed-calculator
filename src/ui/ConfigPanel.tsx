@@ -185,20 +185,6 @@ export function ConfigPanel({ config, setConfig }: Props) {
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, cladding: { ...c.walls.cladding, length: v } } }))}
         />
         <NumberRow
-          label="OSB sheet width"
-          value={config.stock.sheetWidth}
-          min={100}
-          max={5000}
-          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))}
-        />
-        <NumberRow
-          label="OSB sheet height"
-          value={config.stock.sheetHeight}
-          min={100}
-          max={5000}
-          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))}
-        />
-        <NumberRow
           label="Membrane roll width"
           value={config.walls.membrane.rollWidth}
           min={100}
@@ -343,21 +329,6 @@ export function ConfigPanel({ config, setConfig }: Props) {
         />
       </Section>
 
-      <Section title="Timber profiles (per role)">
-        <button className="add-btn" onClick={() => setProfilesOpen(true)}>
-          Edit profiles…
-        </button>
-        {(Object.keys(ROLE_LABELS) as StructuralRole[]).map((role) => (
-          <SelectRow
-            key={role}
-            label={ROLE_LABELS[role]}
-            value={config.roles[role]}
-            options={profileOptions}
-            onChange={(v) => setConfig((c) => markCustom({ ...c, roles: { ...c.roles, [role]: v } }))}
-          />
-        ))}
-      </Section>
-
       <Section title="Openings">
         {config.openings.map((op) => (
           <OpeningEditor key={op.id} opening={op} config={config} setConfig={setConfig} />
@@ -376,6 +347,35 @@ export function ConfigPanel({ config, setConfig }: Props) {
         >
           + Add opening
         </button>
+      </Section>
+
+      <Section title="Materials">
+        <button className="add-btn" onClick={() => setProfilesOpen(true)}>
+          Edit profiles…
+        </button>
+        {(Object.keys(ROLE_LABELS) as StructuralRole[]).map((role) => (
+          <SelectRow
+            key={role}
+            label={ROLE_LABELS[role]}
+            value={config.roles[role]}
+            options={profileOptions}
+            onChange={(v) => setConfig((c) => markCustom({ ...c, roles: { ...c.roles, [role]: v } }))}
+          />
+        ))}
+        <NumberRow
+          label="OSB sheet width"
+          value={config.stock.sheetWidth}
+          min={100}
+          max={5000}
+          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetWidth: v } }))}
+        />
+        <NumberRow
+          label="OSB sheet height"
+          value={config.stock.sheetHeight}
+          min={100}
+          max={5000}
+          onChange={(v) => setConfig((c) => ({ ...c, stock: { ...c.stock, sheetHeight: v } }))}
+        />
       </Section>
 
       <Section title="Fasteners">

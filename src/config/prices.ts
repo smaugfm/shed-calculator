@@ -17,7 +17,7 @@ export const DEFAULT_PRICES: Record<string, number> = {
 
   // Skins / covering — per m²
   'piece:cladding': 200,
-  'piece:roofing': 200,
+  'piece:roofing': 264,
   'piece:membrane-wall': 32,
   'piece:membrane-roof': 32,
   'piece:insulation-wall': 133,
