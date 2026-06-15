@@ -1,0 +1,10 @@
+networks:
+  default:
+    external: true
+    name: nginx-proxy-manager
+services:
+  shed-calculator:
+    build: .
+    image: shed-calculator:latest
+    container_name: shed-calculator
+    restart: unless-stopped
