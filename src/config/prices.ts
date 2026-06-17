@@ -4,11 +4,10 @@
 // Unknown keys fall back to 0.
 export const DEFAULT_PRICES: Record<string, number> = {
   // Timber — per linear metre
-  'timber:25x50': 18.8,
+  'timber:25x50': 27,
   'timber:50x100': 73,
-  'timber:50x120': 87.6,
   'timber:50x150': 110,
-  'timber:25x200': 73,
+  'timber:25x150': 56.25,
 
   // OSB sheets — per m²
   'sheet:osb-floor': 361,
