@@ -97,6 +97,9 @@ unpriced line ⇒ £0). `tsc` + Prettier + `vite build` clean.
   USD, EUR, ¥, UAH, PLN, kr, CHF) plus a **"Custom symbol"** text field for anything else; a typed
   custom symbol is added to the dropdown as a `Custom (…)` option. `BomTable` receives the symbol as a
   prop and shows it beside every price/cost.
+- **Compact costs:** per-line costs in the BOM panel render via `formatMoneyK` (`₴1.5k` for
+  thousands, whole numbers below; full value on hover `title`); only the grand **Total** stays in full
+  (`formatMoney`). Unit-price inputs are unchanged.
 - **Spec text** is a multiline grey block under the label, confined to the **left column** (the
   label cell, `width:100%`) with `white-space: normal` to override the label cell's `nowrap` — so it
   wraps within the label area and does not run under the price/cost on the right. The dialog's cost

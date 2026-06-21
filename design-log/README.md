@@ -22,5 +22,6 @@ sessions, so each carries its Implementation Results inline.
 | 0012 | [Cladding Orientation](./0012-cladding-orientation.md)                       | Vertical/horizontal cladding with perpendicular battens   |
 | 0013 | [BOM Cost Editing](./0013-bom-costs.md)                                      | Per-line unit prices, inline + dialog editing, totals     |
 | 0014 | [Click-to-Select Parts](./0014-pick-selection.md)                            | 3D pick, red highlight, role/material + dimensions panel  |
+| 0015 | [Cut-off Optimizer](./0015-cutoff-optimizer.md)                              | Worker search over dims/overhangs/openings to cut waste   |
 
-Next log number: **0015**.
+Next log number: **0016**.

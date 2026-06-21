@@ -66,7 +66,7 @@ export function App() {
         </aside>
         <Viewport ref={viewportRef} model={model} config={config} rulerActive={rulerActive} layers={layers} />
         <aside className="sidebar right">
-          <BomTable bom={bom} currency={config.currency} setConfig={setConfig} />
+          <BomTable bom={bom} config={config} setConfig={setConfig} />
         </aside>
       </div>
     </div>

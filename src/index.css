@@ -219,7 +219,61 @@ input[aria-invalid='true'] {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin: 4px 0 12px;
+}
+
+.bom-head-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.opt-hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 10px;
+}
+
+.opt-progress {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.opt-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+
+.opt-result {
+  margin-top: 12px;
+}
+
+.opt-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.opt-saving {
+  color: #1a7f37;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.opt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .bom-panel h2 {

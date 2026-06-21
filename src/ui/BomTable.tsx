@@ -3,28 +3,37 @@ import type { BillOfMaterials, BomCategory } from '../bom/types'
 import type { ShedConfig } from '../config/types'
 import { NumberInput } from './fields'
 import { PricesDialog } from './PricesDialog'
-import { bomTotal, formatMoney } from './cost'
+import { OptimizerDialog } from './OptimizerDialog'
+import { bomTotal, formatMoney, formatMoneyK } from './cost'
 
 const CATEGORY_ORDER: BomCategory[] = ['Timber', 'Sheets', 'Insulation', 'Membrane & covering', 'Foundation', 'Fasteners']
 
 interface Props {
   bom: BillOfMaterials
-  currency: string
+  config: ShedConfig
   setConfig: (updater: (c: ShedConfig) => ShedConfig) => void
 }
 
-export function BomTable({ bom, currency, setConfig }: Props) {
+export function BomTable({ bom, config, setConfig }: Props) {
+  const currency = config.currency
   const [editing, setEditing] = useState(false)
+  const [optimizing, setOptimizing] = useState(false)
   const setPrice = (key: string, value: number) => setConfig((c) => ({ ...c, prices: { ...c.prices, [key]: value } }))
 
   return (
     <div className="bom-panel">
       {editing && <PricesDialog bom={bom} currency={currency} setConfig={setConfig} onClose={() => setEditing(false)} />}
+      {optimizing && <OptimizerDialog config={config} currency={currency} setConfig={setConfig} onClose={() => setOptimizing(false)} />}
       <div className="bom-head">
         <h2>Bill of materials</h2>
-        <button className="add-btn" onClick={() => setEditing(true)}>
-          Edit costs…
-        </button>
+        <div className="bom-head-actions">
+          <button className="add-btn" onClick={() => setOptimizing(true)}>
+            Optimize cut-off…
+          </button>
+          <button className="add-btn" onClick={() => setEditing(true)}>
+            Edit costs…
+          </button>
+        </div>
       </div>
       {CATEGORY_ORDER.map((category) => {
         const lines = bom.filter((l) => l.category === category)
@@ -46,7 +55,9 @@ export function BomTable({ bom, currency, setConfig }: Props) {
                         <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
                         <em>/{line.priceUnit}</em>
                       </span>
-                      <div className="bom-cost">{formatMoney(line.cost, currency)}</div>
+                      <div className="bom-cost" title={formatMoney(line.cost, currency)}>
+                        {formatMoneyK(line.cost, currency)}
+                      </div>
                     </td>
                   </tr>
                 ))}

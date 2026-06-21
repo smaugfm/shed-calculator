@@ -3,6 +3,7 @@ import type { ShedConfig, StructuralRole, TimberProfile } from '../config/types'
 import { DEFAULT_PROFILE_LENGTH } from '../config/profiles'
 import { NumberInput } from './fields'
 import { ROLE_LABELS } from './labels'
+import { Modal } from './Modal'
 
 interface Props {
   config: ShedConfig
@@ -35,49 +36,41 @@ export function ProfileDialog({ config, setConfig, onClose }: Props) {
     }))
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head">
-          <h2>Timber profiles</h2>
-          <button className="modal-close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-        {error && <div className="modal-error">{error}</div>}
-        <div className="profile-cols">
-          <span>Label</span>
-          <span>Thickness</span>
-          <span></span>
-          <span>Width</span>
-          <span>Length</span>
-          <span></span>
-        </div>
-        <div className="profile-list">
-          {config.profiles.map((p) => {
-            const used = rolesUsing(p.id)
-            return (
-              <div key={p.id} className="profile-row">
-                <input value={p.label} onChange={(e) => update(p.id, { label: e.target.value })} />
-                <NumberInput value={p.thickness} min={1} max={1000} onChange={(v) => update(p.id, { thickness: v })} />
-                <span>×</span>
-                <NumberInput value={p.width} min={1} max={1000} onChange={(v) => update(p.id, { width: v })} />
-                <NumberInput value={p.length} min={500} max={50000} onChange={(v) => update(p.id, { length: v })} />
-                <button
-                  className="remove-btn"
-                  disabled={used.length > 0}
-                  title={used.length > 0 ? `Used by ${used.map((r) => ROLE_LABELS[r]).join(', ')}` : 'Remove profile'}
-                  onClick={() => remove(p)}
-                >
-                  Remove
-                </button>
-              </div>
-            )
-          })}
-        </div>
-        <button className="add-btn" onClick={add}>
-          + Add profile
-        </button>
+    <Modal title="Timber profiles" onClose={onClose}>
+      {error && <div className="modal-error">{error}</div>}
+      <div className="profile-cols">
+        <span>Label</span>
+        <span>Thickness</span>
+        <span></span>
+        <span>Width</span>
+        <span>Length</span>
+        <span></span>
       </div>
-    </div>
+      <div className="profile-list">
+        {config.profiles.map((p) => {
+          const used = rolesUsing(p.id)
+          return (
+            <div key={p.id} className="profile-row">
+              <input value={p.label} onChange={(e) => update(p.id, { label: e.target.value })} />
+              <NumberInput value={p.thickness} min={1} max={1000} onChange={(v) => update(p.id, { thickness: v })} />
+              <span>×</span>
+              <NumberInput value={p.width} min={1} max={1000} onChange={(v) => update(p.id, { width: v })} />
+              <NumberInput value={p.length} min={500} max={50000} onChange={(v) => update(p.id, { length: v })} />
+              <button
+                className="remove-btn"
+                disabled={used.length > 0}
+                title={used.length > 0 ? `Used by ${used.map((r) => ROLE_LABELS[r]).join(', ')}` : 'Remove profile'}
+                onClick={() => remove(p)}
+              >
+                Remove
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      <button className="add-btn" onClick={add}>
+        + Add profile
+      </button>
+    </Modal>
   )
 }
