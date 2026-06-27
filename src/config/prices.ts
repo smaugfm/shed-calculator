@@ -15,8 +15,8 @@ export const DEFAULT_PRICES: Record<string, number> = {
   'sheet:osb-roof': 361,
 
   // Skins / covering — per m²
-  'piece:cladding': 200,
-  'piece:roofing': 264,
+  'piece:cladding': 235,
+  'piece:roofing': 235,
   'piece:membrane-wall': 32,
   'piece:membrane-roof': 32,
   'piece:insulation-wall': 133,
