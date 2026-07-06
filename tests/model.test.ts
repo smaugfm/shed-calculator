@@ -110,7 +110,9 @@ describe('walls and corners', () => {
   })
 
   it('laps front/back OSB pieces outward past the corner', () => {
-    const front = piecesOf(model, 'osb-wall').filter((p) => p.normal.z < -0.5)
+    // Corner lap applies to outboard OSB (inside OSB butts at the footprint — see osb placement).
+    const outer = buildModel({ ...cfg, walls: { ...cfg.walls, osbSide: 'outside' } })
+    const front = piecesOf(outer, 'osb-wall').filter((p) => p.normal.z < -0.5)
     const xs = front.flatMap((p) => p.uv.map((c) => pieceX(p, c.u)))
     expect(Math.min(...xs)).toBeLessThan(0)
     expect(Math.max(...xs)).toBeGreaterThan(cfg.base.width)
@@ -135,6 +137,36 @@ describe('walls and corners', () => {
     const used = (m: ShedModel, id: MaterialId) => piecesOf(m, id).reduce((s, p) => s + p.usedArea, 0)
     expect(used(model, 'osb-wall')).toBeLessThan(used(noOpenings, 'osb-wall'))
     expect(used(model, 'cladding')).toBeLessThan(used(noOpenings, 'cladding'))
+  })
+})
+
+describe('osb placement', () => {
+  it('places wall OSB outboard or inboard of the studs per osbSide', () => {
+    const out = piecesOf(buildModel({ ...cfg, walls: { ...cfg.walls, osbSide: 'outside' } }), 'osb-wall')
+    const ins = piecesOf(buildModel({ ...cfg, walls: { ...cfg.walls, osbSide: 'inside' } }), 'osb-wall')
+    expect(out.length).toBeGreaterThan(0)
+    expect(out.every((p) => p.offset > 0)).toBe(true)
+    expect(ins.every((p) => p.offset < 0)).toBe(true)
+  })
+
+  it('places roof OSB above or below the rafters per osbSide', () => {
+    const out = piecesOf(buildModel({ ...cfg, roof: { ...cfg.roof, osbSide: 'outside' } }), 'osb-roof')
+    const ins = piecesOf(buildModel({ ...cfg, roof: { ...cfg.roof, osbSide: 'inside' } }), 'osb-roof')
+    expect(out.every((p) => p.offset > 0)).toBe(true)
+    expect(ins.every((p) => p.offset < 0)).toBe(true)
+  })
+
+  it('adds under-joist OSB (wall thickness) below the deck and only in the bays', () => {
+    const under = piecesOf(model, 'osb-underfloor')
+    expect(under.length).toBeGreaterThan(0)
+    expect(under.every((p) => p.thickness === cfg.walls.osbThickness)).toBe(true)
+    // sits at/below the joist bottoms — under its top ≤ the deck's bottom
+    const deckBottom = Math.min(...piecesOf(model, 'osb-floor').map((p) => p.origin.y + p.offset - p.thickness / 2))
+    const underTop = Math.max(...under.map((p) => p.origin.y + p.offset + p.thickness / 2))
+    expect(underTop).toBeLessThanOrEqual(deckBottom + TOL)
+    // grade beams are carved out, so it covers less than the whole floor footprint (not a full slab)
+    const underArea = under.reduce((s, p) => s + p.usedArea, 0)
+    expect(underArea).toBeLessThan((cfg.base.width * cfg.base.depth) / 1e6)
   })
 })
 
@@ -271,8 +303,10 @@ describe('insulation', () => {
   })
 
   it('sits inboard of the OSB (in the framing cavity)', () => {
-    expect(piecesOf(model, 'insulation-wall')[0].offset).toBeLessThan(piecesOf(model, 'osb-wall')[0].offset)
-    expect(piecesOf(model, 'insulation-roof')[0].offset).toBeLessThan(piecesOf(model, 'osb-roof')[0].offset)
+    // With OSB outside, insulation in the cavity sits inboard of it.
+    const m = buildModel({ ...cfg, walls: { ...cfg.walls, osbSide: 'outside' }, roof: { ...cfg.roof, osbSide: 'outside' } })
+    expect(piecesOf(m, 'insulation-wall')[0].offset).toBeLessThan(piecesOf(m, 'osb-wall')[0].offset)
+    expect(piecesOf(m, 'insulation-roof')[0].offset).toBeLessThan(piecesOf(m, 'osb-roof')[0].offset)
   })
 
   it('is recessed within the framing depth (no face tearing)', () => {

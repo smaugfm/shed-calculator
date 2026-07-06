@@ -245,6 +245,7 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
 
   const pieceLayer: Record<MaterialId, LayerName> = {
     'osb-floor': 'floorDeck',
+    'osb-underfloor': 'floorDeck', // shares the OSB deck layer toggle; still a separate BOM line
     'osb-wall': 'wallOsb',
     'osb-roof': 'roofOsb',
     cladding: 'cladding',

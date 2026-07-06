@@ -10,9 +10,10 @@ export const DEFAULT_PRICES: Record<string, number> = {
   'timber:25x150': 56.25,
 
   // OSB sheets — per m²
-  'sheet:osb-floor': 361,
-  'sheet:osb-wall': 197,
-  'sheet:osb-roof': 361,
+  'sheet:osb-floor': 361, // https://budia.ua/ua/plita-osb-25001250-18-mm
+  'sheet:osb-wall': 197, // https://budia.ua/ua/plita-osb-25001250-10-mm
+  'sheet:osb-roof': 361, // https://budia.ua/ua/plita-osb-25001250-18-mm
+  'sheet:osb-underfloor': 197, // wall-profile OSB in the joist bays
 
   // Skins / covering — per m²
   'piece:cladding': 235,

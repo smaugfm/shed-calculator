@@ -23,5 +23,6 @@ sessions, so each carries its Implementation Results inline.
 | 0013 | [BOM Cost Editing](./0013-bom-costs.md)                                      | Per-line unit prices, inline + dialog editing, totals     |
 | 0014 | [Click-to-Select Parts](./0014-pick-selection.md)                            | 3D pick, red highlight, role/material + dimensions panel  |
 | 0015 | [Cut-off Optimizer](./0015-cutoff-optimizer.md)                              | Worker search over dims/overhangs/openings to cut waste   |
+| 0016 | [OSB Placement](./0016-osb-placement.md)                                     | Inside/outside OSB per surface; under-joist OSB in bays   |
 
-Next log number: **0016**.
+Next log number: **0017**.

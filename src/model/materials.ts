@@ -5,6 +5,7 @@ export type MaterialId =
   | 'osb-floor'
   | 'osb-wall'
   | 'osb-roof'
+  | 'osb-underfloor'
   | 'cladding'
   | 'roofing'
   | 'membrane-wall'
@@ -86,6 +87,7 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
     'osb-floor': sheet('osb-floor', 'OSB floor deck', config, config.floor.deckThickness),
     'osb-wall': sheet('osb-wall', 'OSB wall sheathing', config, config.walls.osbThickness),
     'osb-roof': sheet('osb-roof', 'OSB roof sheathing', config, config.roof.osbThickness),
+    'osb-underfloor': sheet('osb-underfloor', 'OSB under-joists', config, config.walls.osbThickness),
     cladding: {
       id: 'cladding',
       label: facadeLabel,

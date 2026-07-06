@@ -46,10 +46,14 @@ export function buildRoof(config: ShedConfig, floorTopY: number): RoofResult {
 
   const osb = config.roof.osbThickness
   const hasBattens = roof.covering === 'ventilated' && roof.battens
-  const osbOffset = rafter.width + osb / 2
-  const membraneOffset = rafter.width + osb + GAP + MEMBRANE_THICKNESS / 2
-  const battenOffset = rafter.width + osb + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
-  const roofingOffset = rafter.width + osb + 2 * GAP + MEMBRANE_THICKNESS + (hasBattens ? batten.thickness + GAP : 0) + ROOFING_THICKNESS / 2
+  const osbInside = config.roof.osbSide === 'inside'
+  // Where the outer layers (membrane → battens → roofing) stack from: the OSB top when OSB is outside,
+  // or the rafter top when OSB is on the inside (under the rafters). OSB offset flips inboard/outboard.
+  const outerBase = osbInside ? rafter.width : rafter.width + osb
+  const osbOffset = osbInside ? -osb / 2 : rafter.width + osb / 2
+  const membraneOffset = outerBase + GAP + MEMBRANE_THICKNESS / 2
+  const battenOffset = outerBase + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
+  const roofingOffset = outerBase + 2 * GAP + MEMBRANE_THICKNESS + (hasBattens ? batten.thickness + GAP : 0) + ROOFING_THICKNESS / 2
   // Top of the roof stack along the normal; fascia/barge boards hang just under the roofing edge
   // (tucked in by `reveal` so the roofing laps over them — no lip and no coplanar z-fighting).
   const topN = roofingOffset + ROOFING_THICKNESS / 2

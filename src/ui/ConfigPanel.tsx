@@ -4,6 +4,7 @@ import type {
   FacadeType,
   OpeningConfig,
   OpeningType,
+  OsbSide,
   RoofCovering,
   ShedConfig,
   ShingleSpec,
@@ -32,6 +33,11 @@ const CLADDING_ORIENTATION_OPTIONS: Option[] = [
 const PLATE_COUNT_OPTIONS: Option[] = [
   { value: '1', label: 'Single' },
   { value: '2', label: 'Double' },
+]
+
+const OSB_SIDE_OPTIONS: Option[] = [
+  { value: 'outside', label: 'Outside' },
+  { value: 'inside', label: 'Inside' },
 ]
 
 const WALL_OPTIONS: Option[] = [
@@ -153,6 +159,12 @@ export function ConfigPanel({ config, setConfig }: Props) {
           onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbThickness: v } }))}
         />
         <SelectRow
+          label="OSB position"
+          value={config.walls.osbSide}
+          options={OSB_SIDE_OPTIONS}
+          onChange={(v) => setConfig((c) => ({ ...c, walls: { ...c.walls, osbSide: v as OsbSide } }))}
+        />
+        <SelectRow
           label="Facade"
           value={config.walls.facadeType}
           options={FACADE_OPTIONS}
@@ -270,6 +282,12 @@ export function ConfigPanel({ config, setConfig }: Props) {
           min={1}
           max={100}
           onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbThickness: v } }))}
+        />
+        <SelectRow
+          label="OSB position"
+          value={config.roof.osbSide}
+          options={OSB_SIDE_OPTIONS}
+          onChange={(v) => setConfig((c) => ({ ...c, roof: { ...c.roof, osbSide: v as OsbSide } }))}
         />
         <ShingleRows config={config} setConfig={setConfig} />
         <NumberRow

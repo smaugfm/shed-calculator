@@ -128,7 +128,12 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   // batten's thickness (not width) forms the cavity depth, so `up` is perpendicular to the run.
   const tangent = normalize(sub(map(1, 0), map(0, 0)))
   const bw2 = batten.width / 2
-  const innerBattenOffset = config.walls.osbThickness + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
+  const osb = config.walls.osbThickness
+  const osbInside = config.walls.osbSide === 'inside'
+  // Where the outer layers (membrane → battens → cladding) start along the normal: the OSB outer face
+  // when OSB is outside, or the stud outer face (0) when OSB is on the inside.
+  const outerBase = osbInside ? 0 : osb
+  const innerBattenOffset = outerBase + GAP + MEMBRANE_THICKNESS + GAP + batten.thickness / 2
   const hasCounter = config.walls.counterBattens
   const primaryBattenOffset = hasCounter ? innerBattenOffset + batten.thickness : innerBattenOffset
 
@@ -185,9 +190,9 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   }
 
   const fac = FACADE_THICKNESS[config.walls.facadeType]
-  const osb = config.walls.osbThickness
-  const osbOffset = osb / 2
-  const membraneOffset = osb + GAP + MEMBRANE_THICKNESS / 2
+  // OSB inboard of the stud inner face (inside) or just outboard of the outer face (outside).
+  const osbOffset = osbInside ? -stud.width - osb / 2 : osb / 2
+  const membraneOffset = outerBase + GAP + MEMBRANE_THICKNESS / 2
   const claddingOffset = primaryBattenOffset + batten.thickness / 2 + GAP + fac / 2
   const lapOf = (offset: number, thickness: number) => (gableTopYAt ? offset - thickness / 2 : offset + thickness / 2)
 
@@ -205,7 +210,7 @@ function buildWall(side: WallSide, config: ShedConfig, floorTopY: number): Walls
   ]
   const surface = (offset: number): Surface => ({ origin, uDir: tangent, vDir: v(0, 1, 0), normal, offset })
   const pieces: Piece[] = [
-    ...tilePolygon(surface(osbOffset), outline(lapOf(osbOffset, osb)), holesUv, specs['osb-wall']),
+    ...tilePolygon(surface(osbOffset), outline(osbInside ? 0 : lapOf(osbOffset, osb)), holesUv, specs['osb-wall']),
     ...tilePolygon(surface(membraneOffset), outline(lapOf(membraneOffset, MEMBRANE_THICKNESS)), holesUv, specs['membrane-wall']),
     ...tilePolygon(surface(claddingOffset), outline(lapOf(claddingOffset, fac)), holesUv, specs.cladding),
   ]

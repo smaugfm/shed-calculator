@@ -18,10 +18,10 @@ export const DEFAULT_FASTENERS: FastenerConfig = {
   catalog: FASTENER_CATALOG,
   sheathing: { specId: 'nail-2.8x50', perimeterSpacing: 150, fieldSpacing: 300 },
   cladding: { specId: 'screw-4.5x60', spacing: 300 },
-  batten: { specId: 'screw-5x80', spacing: 600 },
+  batten: { specId: 'screw-4x80', spacing: 600 },
   framing: { specId: 'screw-5x100', perJoint: 2 },
   joistHanger: { specId: 'joist-hanger-45', perEnd: 1 },
-  rafterFixing: { specId: 'angle-bracket', perEnd: 1 },
+  rafterFixing: { specId: 'angle-bracket', perEnd: 2 },
   postAnchor: { specId: 'post-anchor', perPile: 1 },
   roofCovering: { specId: 'nail-clout-3x20', kind: 'nailsPerSqm', ratePerSqm: 20 },
 }

@@ -1,10 +1,10 @@
 import type { TimberProfile } from './types'
 
 export const PROFILE_LIBRARY: TimberProfile[] = [
-  { id: '25x50', label: '25×50', thickness: 25, width: 50, length: 3000 },
-  { id: '50x100', label: '50×100', thickness: 50, width: 100, length: 3000 },
-  { id: '50x150', label: '50×150', thickness: 50, width: 150, length: 3000 },
-  { id: '25x150', label: '25×150', thickness: 25, width: 200, length: 3000 },
+  { id: '25x50', label: '25×50', thickness: 25, width: 50, length: 1000 },
+  { id: '50x100', label: '50×100', thickness: 50, width: 100, length: 4500 },
+  { id: '50x150', label: '50×150', thickness: 50, width: 150, length: 6000 },
+  { id: '25x150', label: '25×150', thickness: 25, width: 200, length: 6000 },
 ]
 
 export const DEFAULT_PROFILE_LENGTH = 4800

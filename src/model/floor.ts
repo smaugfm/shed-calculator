@@ -67,21 +67,37 @@ export function buildFloor(config: ShedConfig): FloorResult {
     makeMember('joist', joist, v(0, joistCenterY, base.depth - halfT), v(base.width, joistCenterY, base.depth - halfT), v(0, 1, 0)),
   )
 
+  const specs = materialSpecs(config)
+  const floorRect = [
+    { u: 0, v: 0 },
+    { u: base.width, v: 0 },
+    { u: base.width, v: base.depth },
+    { u: 0, v: base.depth },
+  ]
   const deck = tilePolygon(
     { origin: v(0, floorTopY, 0), uDir: v(1, 0, 0), vDir: v(0, 0, 1), normal: v(0, 1, 0), offset: -floor.deckThickness / 2 },
-    [
-      { u: 0, v: 0 },
-      { u: base.width, v: 0 },
-      { u: base.width, v: base.depth },
-      { u: 0, v: base.depth },
-    ],
+    floorRect,
     [],
-    materialSpecs(config)['osb-floor'],
+    specs['osb-floor'],
+  )
+
+  // OSB under the joists (wall-OSB thickness), covering the joists but cut around the grade beams —
+  // the joists bear on the beams there, so the panel is never sandwiched between a joist and a beam.
+  const bt = beam.thickness
+  const beamHoles = [
+    ...xs.map((x) => ({ u0: x - bt / 2, u1: x + bt / 2, v0: 0, v1: base.depth })),
+    ...zs.map((z) => ({ u0: 0, u1: base.width, v0: z - bt / 2, v1: z + bt / 2 })),
+  ]
+  const underJoistOsb = tilePolygon(
+    { origin: v(0, joistBottom, 0), uDir: v(1, 0, 0), vDir: v(0, 0, 1), normal: v(0, 1, 0), offset: -config.walls.osbThickness / 2 },
+    floorRect,
+    beamHoles,
+    specs['osb-underfloor'],
   )
 
   return {
     members,
-    pieces: deck,
+    pieces: [...deck, ...underJoistOsb],
     floorTopY,
     joistCount: joistXs.length,
     joistEnds: joistXs.length * 2,

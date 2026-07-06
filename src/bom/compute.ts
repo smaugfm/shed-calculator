@@ -85,7 +85,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
   const lines: Draft[] = []
   const sheetArea = (config.stock.sheetWidth * config.stock.sheetHeight) / 1e6
 
-  for (const id of ['osb-floor', 'osb-wall', 'osb-roof'] as const) {
+  for (const id of ['osb-floor', 'osb-underfloor', 'osb-wall', 'osb-roof'] as const) {
     const group = pieces.filter((p) => p.materialId === id)
     if (group.length === 0) continue
     const sheets = packSheets(group.map(pieceBBox), config.stock.sheetWidth, config.stock.sheetHeight, true)

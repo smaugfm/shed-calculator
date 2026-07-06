@@ -91,11 +91,13 @@ export interface FloorConfig {
 
 export type FacadeType = 'cladding' | 'metal'
 export type CladdingOrientation = 'vertical' | 'horizontal'
+export type OsbSide = 'inside' | 'outside'
 
 export interface WallConfig {
   studSpacing: Millimetres
   battenSpacing: Millimetres
   osbThickness: Millimetres
+  osbSide: OsbSide
   facadeType: FacadeType
   claddingOrientation: CladdingOrientation
   counterBattens: boolean // add a second, perpendicular batten layer for cross ventilation
@@ -121,6 +123,7 @@ export interface RoofConfig {
   battenSpacing: Millimetres
   rafterSpacing: Millimetres
   osbThickness: Millimetres
+  osbSide: OsbSide
   shingle: ShingleSpec
   metalShingle: ShingleSpec
   membrane: MembraneConfig
