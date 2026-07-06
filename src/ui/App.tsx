@@ -39,6 +39,7 @@ export function App() {
   const { config, setConfig, reset, model, bom } = useShed()
   const [rulerActive, setRulerActive] = useState(false)
   const [layers, setLayers] = useState<Record<LayerName, boolean>>(loadLayers)
+  const [highlightKey, setHighlightKey] = useState<string | null>(null)
   const viewportRef = useRef<ViewportHandle>(null)
 
   useEffect(() => {
@@ -64,9 +65,23 @@ export function App() {
           <LayersPanel layers={layers} setLayers={setLayers} hidden={hiddenLayers(config)} />
           <ConfigPanel config={config} setConfig={setConfig} />
         </aside>
-        <Viewport ref={viewportRef} model={model} config={config} rulerActive={rulerActive} layers={layers} />
+        <Viewport
+          ref={viewportRef}
+          model={model}
+          config={config}
+          rulerActive={rulerActive}
+          layers={layers}
+          highlightKey={highlightKey}
+          onHighlightKeyChange={setHighlightKey}
+        />
         <aside className="sidebar right">
-          <BomTable bom={bom} config={config} setConfig={setConfig} />
+          <BomTable
+            bom={bom}
+            config={config}
+            setConfig={setConfig}
+            highlightKey={highlightKey}
+            onHighlight={(key) => setHighlightKey((k) => (k === key ? null : key))}
+          />
         </aside>
       </div>
     </div>

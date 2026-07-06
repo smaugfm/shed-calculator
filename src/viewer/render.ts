@@ -227,12 +227,14 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     const mesh = withEdges(new THREE.Mesh(new THREE.BoxGeometry(p.size, p.top - p.bottom, p.size), pile))
     mesh.position.set(p.x, (p.bottom + p.top) / 2, p.z)
     mesh.userData.pick = pileInfo(p)
+    mesh.userData.bomKey = 'foundation:piles'
     layers.piles.add(mesh)
   }
 
   for (const m of model.members) {
     const mesh = memberMesh(m)
     mesh.userData.pick = memberInfo(m, config)
+    mesh.userData.bomKey = `timber:${m.profileId}`
     layers[memberLayer(m)].add(mesh)
   }
 
@@ -240,6 +242,7 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     if (panel.kind !== 'soffit') continue
     const mesh = panelMesh(panel, osbMaterial(len(panel.u), len(panel.v)))
     mesh.userData.pick = panelInfo(panel)
+    mesh.userData.bomKey = 'panel:soffit'
     layers.soffit.add(mesh)
   }
 
@@ -274,6 +277,7 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     const isInsulation = piece.materialId.startsWith('insulation')
     const mesh = pieceMesh(piece, pieceMat(piece.materialId), isInsulation)
     mesh.userData.pick = pieceInfo(piece, config)
+    mesh.userData.bomKey = `${piece.materialId.startsWith('osb') ? 'sheet' : 'piece'}:${piece.materialId}`
     layers[pieceLayer[piece.materialId]].add(mesh)
   }
 

@@ -77,3 +77,14 @@ now skips any hit whose mesh (or an ancestor group) is invisible via an `isVisib
 **Tests:** 64 total (added 3 in `tests/selection.test.ts` for the info builders — member, piece,
 pile). `tsc` + Prettier + `vite build` clean. (The raycast/highlight wiring itself is UI/three and
 verified manually.)
+
+### Follow-up — highlight all pieces of a BOM line
+
+Clicking a BOM row now highlights **every matching part** red in the model (e.g. all 50×150 beams),
+so you can see where a material is used. Each mesh is tagged `userData.bomKey` mirroring the BOM
+`priceKey` (`timber:<profileId>`, `sheet:<osb id>`, `piece:<material>`, `panel:soffit`,
+`foundation:piles`). `Selection` was generalised from a single mesh to a **highlight set**
+(`highlightByKey(key)` paints all visible matches, single pick paints one). The active key lives in
+`App` state — the BOM row label is clickable (toggles), the active row is styled red, and the viewer
+applies it (re-applied after any scene rebuild). A 3D pick fires `onPointerSelect` → clears the BOM
+key so the two stay consistent. Fasteners have no meshes, so their rows highlight nothing.

@@ -408,6 +408,7 @@ input[aria-invalid='true'] {
 .bom-label {
   font-weight: 600;
   white-space: nowrap;
+  padding-left: 10px !important;
   padding-right: 8px !important;
 }
 
@@ -419,6 +420,23 @@ input[aria-invalid='true'] {
   white-space: normal; /* override the label cell's nowrap so the spec wraps */
   margin-top: 3px;
   padding-bottom: 6px;
+}
+
+.bom-label-click {
+  cursor: pointer;
+}
+
+.bom-label-click:hover {
+  color: #ff3b30;
+}
+
+.bom-row-active .bom-label {
+  color: #ff3b30;
+  box-shadow: inset 3px 0 0 #ff3b30;
+}
+
+.bom-row-active .bom-spec {
+  color: #ff3b30;
 }
 
 .layers-actions {

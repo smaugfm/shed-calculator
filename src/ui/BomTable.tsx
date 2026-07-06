@@ -12,9 +12,11 @@ interface Props {
   bom: BillOfMaterials
   config: ShedConfig
   setConfig: (updater: (c: ShedConfig) => ShedConfig) => void
+  highlightKey: string | null
+  onHighlight: (key: string) => void
 }
 
-export function BomTable({ bom, config, setConfig }: Props) {
+export function BomTable({ bom, config, setConfig, highlightKey, onHighlight }: Props) {
   const currency = config.currency
   const [editing, setEditing] = useState(false)
   const [optimizing, setOptimizing] = useState(false)
@@ -43,24 +45,31 @@ export function BomTable({ bom, config, setConfig }: Props) {
             <h3>{category}</h3>
             <table>
               <tbody>
-                {lines.map((line) => (
-                  <tr key={line.priceKey}>
-                    <td className="bom-label">
-                      {line.label}
-                      <div className="bom-spec">{line.spec}</div>
-                    </td>
-                    <td className="bom-price">
-                      <span className="bom-price-edit" title={`Price per ${line.priceUnit}`}>
-                        <em>{currency}</em>
-                        <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
-                        <em>/{line.priceUnit}</em>
-                      </span>
-                      <div className="bom-cost" title={formatMoney(line.cost, currency)}>
-                        {formatMoneyK(line.cost, currency)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {lines.map((line) => {
+                  const selectable = line.category !== 'Fasteners' // fasteners aren't rendered → nothing to highlight
+                  return (
+                    <tr key={line.priceKey} className={line.priceKey === highlightKey ? 'bom-row-active' : undefined}>
+                      <td
+                        className={selectable ? 'bom-label bom-label-click' : 'bom-label'}
+                        title={selectable ? 'Highlight these parts in the model' : undefined}
+                        onClick={selectable ? () => onHighlight(line.priceKey) : undefined}
+                      >
+                        {line.label}
+                        <div className="bom-spec">{line.spec}</div>
+                      </td>
+                      <td className="bom-price">
+                        <span className="bom-price-edit" title={`Price per ${line.priceUnit}`}>
+                          <em>{currency}</em>
+                          <NumberInput value={line.unitPrice} min={0} step={1} onChange={(v) => setPrice(line.priceKey, v)} />
+                          <em>/{line.priceUnit}</em>
+                        </span>
+                        <div className="bom-cost" title={formatMoney(line.cost, currency)}>
+                          {formatMoneyK(line.cost, currency)}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

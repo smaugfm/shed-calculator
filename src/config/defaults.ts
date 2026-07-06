@@ -51,7 +51,7 @@ export function defaultConfig(): ShedConfig {
       metalShingle: { width: 1100, height: 3000, exposure: 2850 },
       membrane: { rollWidth: 1500, rollLength: 50000, overlap: 150 },
       insulation: { enabled: true, rollLength: 7500 },
-      overhangs: { front: 600, rear: 300, sides: 120 },
+      overhangs: { front: 1000, rear: 500, sides: 150 },
     },
     openings: [
       { id: 'door-1', wall: 'front', type: 'door', width: 1350, height: 2100, sillHeight: 0, offsetAlongWall: 600 },

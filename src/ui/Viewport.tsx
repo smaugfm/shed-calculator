@@ -16,9 +16,14 @@ interface ViewportProps {
   config: ShedConfig
   rulerActive: boolean
   layers: Record<LayerName, boolean>
+  highlightKey: string | null
+  onHighlightKeyChange: (key: string | null) => void
 }
 
-export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewport({ model, config, rulerActive, layers }, ref) {
+export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewport(
+  { model, config, rulerActive, layers, highlightKey, onHighlightKeyChange },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<Scene | null>(null)
   const rulerRef = useRef<Ruler | null>(null)
@@ -31,6 +36,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewp
     const ruler = new Ruler(scene)
     const selection = new Selection(scene)
     selection.onChange = setSelected
+    selection.onPointerSelect = () => onHighlightKeyChange(null) // a 3D pick supersedes a BOM-row highlight
     sceneRef.current = scene
     rulerRef.current = ruler
     selectionRef.current = selection
@@ -53,6 +59,11 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(function Viewp
       scene.setLayerVisible(name as LayerName, visible)
     }
   }, [model, config, layers])
+
+  // Highlight all pieces of the BOM row the user clicked (re-applied after any scene rebuild).
+  useEffect(() => {
+    selectionRef.current?.highlightByKey(highlightKey)
+  }, [highlightKey, model, config, layers])
 
   // The ruler and selection both consume clicks — only one is active at a time.
   useEffect(() => {
