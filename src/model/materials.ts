@@ -12,6 +12,7 @@ export type MaterialId =
   | 'membrane-roof'
   | 'insulation-wall'
   | 'insulation-roof'
+  | 'insulation-floor'
 
 export interface MaterialSpec {
   id: MaterialId
@@ -78,6 +79,7 @@ function insulation(id: MaterialId, label: string, rollLength: number, spacing: 
 export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSpec> {
   const stud = findProfile(config.profiles, config.roles.stud)
   const rafter = findProfile(config.profiles, config.roles.rafter)
+  const joist = findProfile(config.profiles, config.roles.joist)
   const clad = config.walls.cladding
   const vertical = config.walls.claddingOrientation === 'vertical'
   const facadeLabel = config.walls.facadeType === 'metal' ? 'Facade — corrugated metal' : 'Facade — timber cladding'
@@ -126,6 +128,13 @@ export function materialSpecs(config: ShedConfig): Record<MaterialId, MaterialSp
       config.roof.insulation.rollLength,
       config.roof.rafterSpacing,
       Math.max(1, rafter.width - 2 * INSULATION_RECESS),
+    ),
+    'insulation-floor': insulation(
+      'insulation-floor',
+      'Mineral wool (floor)',
+      config.floor.insulation.rollLength,
+      config.floor.joistSpacing,
+      Math.max(1, joist.width - 2 * INSULATION_RECESS),
     ),
   }
 }

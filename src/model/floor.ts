@@ -4,7 +4,7 @@ import type { Member, Piece } from './types'
 import { makeMember, v } from './geometry'
 import { pilePositions } from './foundation'
 import { materialSpecs } from './materials'
-import { tilePolygon } from './tiling'
+import { tileBays, tilePolygon, type UvRect } from './tiling'
 
 export function spacedPositions(span: number, spacing: number): number[] {
   if (spacing <= 0 || !Number.isFinite(spacing)) return [0, span]
@@ -95,9 +95,25 @@ export function buildFloor(config: ShedConfig): FloorResult {
     specs['osb-underfloor'],
   )
 
+  // Mineral wool in the joist bays: between the main joists (u inset by half a joist each side) and
+  // inside the front/back rim joists (v), centred at joist mid-height so it tucks between the deck
+  // OSB above and the under-joist OSB below.
+  const insulation: Piece[] = []
+  if (config.floor.insulation.enabled) {
+    const joistCenters = [...joistXs.map(insetX)].sort((a, b) => a - b)
+    const bays: UvRect[] = []
+    for (let i = 0; i < joistCenters.length - 1; i++) {
+      const u0 = joistCenters[i] + halfT
+      const u1 = joistCenters[i + 1] - halfT
+      if (u1 - u0 > 1) bays.push({ u0, u1, v0: joist.thickness, v1: base.depth - joist.thickness })
+    }
+    const floorSurface = { origin: v(0, joistBottom, 0), uDir: v(1, 0, 0), vDir: v(0, 0, 1), normal: v(0, 1, 0), offset: joist.width / 2 }
+    insulation.push(...tileBays(floorSurface, bays, floorRect, [], specs['insulation-floor']))
+  }
+
   return {
     members,
-    pieces: [...deck, ...underJoistOsb],
+    pieces: [...deck, ...underJoistOsb, ...insulation],
     floorTopY,
     joistCount: joistXs.length,
     joistEnds: joistXs.length * 2,

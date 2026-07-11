@@ -22,6 +22,7 @@ export const DEFAULT_PRICES: Record<string, number> = {
   'piece:membrane-roof': 32,
   'piece:insulation-wall': 133,
   'piece:insulation-roof': 133,
+  'piece:insulation-floor': 133,
 
   'panel:soffit': 197, // per m²
   'foundation:piles': 0, // per pile

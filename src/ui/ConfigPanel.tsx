@@ -133,6 +133,19 @@ export function ConfigPanel({ config, setConfig }: Props) {
           max={100}
           onChange={(v) => setConfig((c) => ({ ...c, floor: { ...c.floor, deckThickness: v } }))}
         />
+        <CheckboxRow
+          label="Insulation"
+          checked={config.floor.insulation.enabled}
+          title="Mineral-wool rolls in the joist cavity"
+          onChange={(b) => setConfig((c) => markCustom({ ...c, floor: { ...c.floor, insulation: { ...c.floor.insulation, enabled: b } } }))}
+        />
+        <NumberRow
+          label="Insulation roll length"
+          value={config.floor.insulation.rollLength}
+          min={1000}
+          max={50000}
+          onChange={(v) => setConfig((c) => ({ ...c, floor: { ...c.floor, insulation: { ...c.floor.insulation, rollLength: v } } }))}
+        />
       </Section>
 
       <Section title="Walls">

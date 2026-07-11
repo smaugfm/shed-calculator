@@ -13,6 +13,7 @@ const LAYERS_KEY = 'shed-calculator:layers'
 function hiddenLayers(config: ShedConfig): LayerName[] {
   const hidden: LayerName[] = []
   if (!(config.roof.covering === 'ventilated' && config.roof.battens)) hidden.push('roofBattens')
+  if (!config.floor.insulation.enabled) hidden.push('floorInsulation')
   if (!config.walls.insulation.enabled) hidden.push('wallInsulation')
   if (!config.roof.insulation.enabled) hidden.push('roofInsulation')
   return hidden

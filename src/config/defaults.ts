@@ -24,7 +24,7 @@ export function defaultConfig(): ShedConfig {
       fascia: '25x150',
     },
     foundation: deriveFoundation(3, 3),
-    floor: { joistSpacing: 400, deckThickness: 18 },
+    floor: { joistSpacing: 400, deckThickness: 18, insulation: { enabled: true, rollLength: 7500 } },
     walls: {
       studSpacing: 700,
       battenSpacing: 600,
@@ -54,8 +54,8 @@ export function defaultConfig(): ShedConfig {
       overhangs: { front: 1000, rear: 500, sides: 150 },
     },
     openings: [
-      { id: 'door-1', wall: 'front', type: 'door', width: 1350, height: 2100, sillHeight: 0, offsetAlongWall: 600 },
-      { id: 'window-1', wall: 'front', type: 'window', width: 1400, height: 1000, sillHeight: 1000, offsetAlongWall: 3500 },
+      { id: 'door-1', wall: 'front', type: 'door', width: 1230, height: 2080, sillHeight: 0, offsetAlongWall: 600 },
+      { id: 'window-1', wall: 'front', type: 'window', width: 1530, height: 1030, sillHeight: 800, offsetAlongWall: 3500 },
     ],
     fasteners: structuredClone(DEFAULT_FASTENERS),
     preset: 'normal',

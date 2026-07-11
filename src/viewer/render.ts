@@ -11,6 +11,7 @@ export type LayerName =
   | 'piles'
   | 'gradeBeams'
   | 'joists'
+  | 'floorInsulation'
   | 'floorDeck'
   | 'wallFraming'
   | 'wallOsb'
@@ -37,6 +38,7 @@ export const LAYERS: LayerMeta[] = [
   { name: 'piles', label: 'Piles', group: 'Foundation' },
   { name: 'gradeBeams', label: 'Grade beams', group: 'Foundation' },
   { name: 'joists', label: 'Joists & rim', group: 'Floor' },
+  { name: 'floorInsulation', label: 'Floor insulation', group: 'Floor' },
   { name: 'floorDeck', label: 'OSB deck', group: 'Floor' },
   { name: 'wallFraming', label: 'Studs, plates, headers', group: 'Walls' },
   { name: 'wallInsulation', label: 'Wall insulation', group: 'Walls' },
@@ -257,6 +259,7 @@ export function buildSceneObject(model: ShedModel, config: ShedConfig): RenderRe
     'membrane-roof': 'roofMembrane',
     'insulation-wall': 'wallInsulation',
     'insulation-roof': 'roofInsulation',
+    'insulation-floor': 'floorInsulation',
   }
   const osbMat = osbPieceMaterial()
   const membraneMat = membranePieceMaterial()

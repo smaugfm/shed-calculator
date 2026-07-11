@@ -87,6 +87,7 @@ export interface FoundationConfig {
 export interface FloorConfig {
   joistSpacing: Millimetres
   deckThickness: Millimetres
+  insulation: InsulationConfig
 }
 
 export type FacadeType = 'cladding' | 'metal'

@@ -94,7 +94,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
     lines.push({
       category: 'Sheets',
       label: specs[id].label,
-      spec: `${sheets} sheets (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      spec: `${sheets} sheets (${specs[id].dims}) · ${round(used)} m² used · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: sheets,
       unit: 'sheets',
       priceKey: `sheet:${id}`,
@@ -113,7 +113,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
     lines.push({
       category: 'Membrane & covering',
       label: specs.cladding.label,
-      spec: `${boards} boards (${specs.cladding.dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      spec: `${boards} boards (${specs.cladding.dims}) · ${round(used)} m² used · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: boards,
       unit: 'boards',
       priceKey: 'piece:cladding',
@@ -138,7 +138,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
     lines.push({
       category: 'Membrane & covering',
       label: specs[id].label,
-      spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      spec: `${rolls} rolls (${specs[id].dims}) · ${round(used)} m² used · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: rolls,
       unit: 'rolls',
       priceKey: `piece:${id}`,
@@ -152,6 +152,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
   for (const [id, ins, width] of [
     ['insulation-wall', config.walls.insulation, config.walls.studSpacing],
     ['insulation-roof', config.roof.insulation, config.roof.rafterSpacing],
+    ['insulation-floor', config.floor.insulation, config.floor.joistSpacing],
   ] as const) {
     const group = pieces.filter((p) => p.materialId === id)
     if (group.length === 0) continue
@@ -164,7 +165,7 @@ function pieceLines(pieces: Piece[], config: ShedConfig): Draft[] {
     lines.push({
       category: 'Insulation',
       label: specs[id].label,
-      spec: `${rolls} rolls (${specs[id].dims}) · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
+      spec: `${rolls} rolls (${specs[id].dims}) · ${round(used)} m² used · ${round(bought)} m² bought · ${round(bought - used)} m² offcut`,
       qty: rolls,
       unit: 'rolls',
       priceKey: `piece:${id}`,

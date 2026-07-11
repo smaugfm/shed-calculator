@@ -293,13 +293,30 @@ describe('insulation', () => {
     ...cfg,
     walls: { ...cfg.walls, insulation: { ...cfg.walls.insulation, enabled: false } },
     roof: { ...cfg.roof, insulation: { ...cfg.roof.insulation, enabled: false } },
+    floor: { ...cfg.floor, insulation: { ...cfg.floor.insulation, enabled: false } },
   })
 
   it('emits cavity pieces only when enabled', () => {
     expect(piecesOf(model, 'insulation-wall').length).toBeGreaterThan(0)
     expect(piecesOf(model, 'insulation-roof').length).toBeGreaterThan(0)
+    expect(piecesOf(model, 'insulation-floor').length).toBeGreaterThan(0)
     expect(piecesOf(noIns, 'insulation-wall').length).toBe(0)
     expect(piecesOf(noIns, 'insulation-roof').length).toBe(0)
+    expect(piecesOf(noIns, 'insulation-floor').length).toBe(0)
+  })
+
+  it('fills the floor joist cavity between the two OSB layers, recessed within the joist depth', () => {
+    const joist = findProfile(cfg.profiles, cfg.roles.joist)
+    const floor = piecesOf(model, 'insulation-floor')[0]
+    expect(floor.normal.y).toBe(1)
+    expect(floor.thickness).toBeLessThan(joist.width)
+    expect(floor.thickness).toBeGreaterThan(joist.width - 20)
+    // Centre sits at joist mid-height: between the under-joist OSB (below) and the deck OSB (above).
+    const under = piecesOf(model, 'osb-underfloor')[0]
+    const deck = piecesOf(model, 'osb-floor')[0]
+    const insY = floor.origin.y + floor.offset
+    expect(insY).toBeGreaterThan(under.origin.y + under.offset)
+    expect(insY).toBeLessThan(deck.origin.y + deck.offset)
   })
 
   it('sits inboard of the OSB (in the framing cavity)', () => {
